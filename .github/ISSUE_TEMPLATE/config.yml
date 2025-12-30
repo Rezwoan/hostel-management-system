@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing Guide
+    url: https://github.com/<OWNER>/<REPO>/blob/develop/CONTRIBUTING.md
+    about: Read workflow rules for branches/commits/PRs/DoD
+  - name: Setup Guide
+    url: https://github.com/<OWNER>/<REPO>/blob/develop/docs/SETUP.md
+    about: How to run the project locally

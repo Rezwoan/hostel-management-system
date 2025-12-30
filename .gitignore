@@ -1,0 +1,72 @@
+# =========================
+# OS / Editor junk
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors/IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# =========================
+# PHP / Composer
+# =========================
+vendor/
+composer.phar
+composer.lock
+
+# =========================
+# Local environment / config (DO NOT COMMIT)
+# =========================
+config/config.php
+config/.env
+.env
+.env.*
+*.local.php
+*.local.json
+
+# =========================
+# Logs / cache / runtime
+# =========================
+logs/
+log/
+*.log
+
+tmp/
+cache/
+storage/cache/
+
+# =========================
+# User uploads / generated files
+# =========================
+storage/uploads/
+public/uploads/
+uploads/
+
+# If you want to keep the folder but ignore contents:
+# (Create an empty .gitkeep file inside uploads folders)
+# storage/uploads/*
+# !storage/uploads/.gitkeep
+
+# =========================
+# Build / minified outputs (optional)
+# =========================
+public/assets/dist/
+dist/
+
+# =========================
+# Database exports / dumps (optional)
+# =========================
+*.sql
+!database/schema.sql
+!database/seed.sql
+
+# =========================
+# Tests / coverage (optional)
+# =========================
+coverage/

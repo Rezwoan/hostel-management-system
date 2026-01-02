@@ -22,15 +22,14 @@ jobs:
           username: hostel-management-system@hostel-management-system.rezwoan.me
           password: hostel-management-system
           
-          # 1. FIXED: Use plain FTP to avoid the TLS "FIN packet" error
+          # Protocol set to FTP to fix the "FIN packet" error
           protocol: ftp
           port: 21
           
           local-dir: ./
           
-          # 2. FIXED: Changed to root (./) because your FTP user 
-          # is likely already locked to the correct folder.
-          server-dir: ./
+          # Directory restored to the specific folder
+          server-dir: hostel-management-system.rezwoan.me/
           
           exclude: |
             .git/**

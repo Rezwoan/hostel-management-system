@@ -19,7 +19,7 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ftp.rezwoan.me
-          username: hostel-management-system@rezwoan.me
+          username: hostel-management-system@hostel-management-system.rezwoan.me
           password: hostel-management-system
           protocol: ftps
           port: 21

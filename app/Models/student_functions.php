@@ -1,25 +1,28 @@
 <?php
 // app/Models/student_functions.php
 
+// Ensure this path matches your file structure (Same folder)
 require_once __DIR__ . '/DB_Connect.php';
 
 /**
  * Create a new student account (User + Role + Profile)
- * * @param string $name
+ * @param string $name
  * @param string $email
- * @param string $password (Raw password, we hash it here)
+ * @param string $password
  * @param string $phone
  * @param string $studentId
  * @param string $department
  * @param string $sessionYear
- * * @return bool|string Returns TRUE on success, Error Message string on failure
+ * @param string $dob      (New Argument)
+ * @param string $address  (New Argument)
+ * @return bool|string Returns TRUE on success, Error Message string on failure
  */
-function createStudentAccount($name, $email, $password, $phone, $studentId, $department, $sessionYear) {
+function createStudentAccount($name, $email, $password, $phone, $studentId, $department, $sessionYear, $dob, $address) {
     
     // 1. Setup Connection
     $conn = dbConnect();
     
-    // Hash password immediately - Model handles data integrity
+    // Hash password immediately
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
     // 2. Start Transaction
@@ -51,10 +54,12 @@ function createStudentAccount($name, $email, $password, $phone, $studentId, $dep
         }
         mysqli_stmt_close($stmtRole);
 
-        // --- C. Create Student Profile ---
-        $sqlProfile = "INSERT INTO student_profiles (user_id, student_id, department, session_year) VALUES (?, ?, ?, ?)";
+        // --- C. Create Student Profile (Updated with DOB and Address) ---
+        $sqlProfile = "INSERT INTO student_profiles (user_id, student_id, department, session_year, dob, address) VALUES (?, ?, ?, ?, ?, ?)";
         $stmtProfile = mysqli_prepare($conn, $sqlProfile);
-        mysqli_stmt_bind_param($stmtProfile, "isss", $newUserId, $studentId, $department, $sessionYear);
+        
+        // Bind Params: i (int) + s (string) * 5
+        mysqli_stmt_bind_param($stmtProfile, "isssss", $newUserId, $studentId, $department, $sessionYear, $dob, $address);
         
         if (!mysqli_stmt_execute($stmtProfile)) {
             if ($conn->errno === 1062) throw new Exception("That Student ID is already registered.");

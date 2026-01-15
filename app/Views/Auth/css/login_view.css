@@ -1,0 +1,150 @@
+/* ==============================================
+   LOGIN PAGE - View Specific Styles
+   File: app/Views/Auth/css/login_view.css
+   ============================================== */
+
+/* Login Page Layout */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* Logo Section */
+.auth-logo {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo-icon {
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary);
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.logo-icon svg {
+    width: 32px;
+    height: 32px;
+    color: #ffffff;
+}
+
+.auth-logo h1 {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.auth-logo p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+/* Login Card */
+.auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 30px;
+}
+
+.auth-card .card-header {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 20px;
+}
+
+/* Form Options (Remember me / Forgot password) */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+/* Divider */
+.auth-divider {
+    text-align: center;
+    margin: 25px 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+}
+
+.auth-divider span {
+    background: var(--surface);
+    padding: 0 15px;
+    position: relative;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Links */
+.auth-link {
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Page Footer */
+.page-footer {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .auth-card {
+        padding: 25px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 20px 15px;
+    }
+    
+    .auth-card {
+        padding: 20px 15px;
+    }
+}

@@ -62,9 +62,9 @@ dist/
 # =========================
 # Database exports / dumps (optional)
 # =========================
-*.sql
-!database/schema.sql
-!database/seed.sql
+# *.sql
+# !database/schema.sql
+# !database/seed.sql
 
 # =========================
 # Tests / coverage (optional)

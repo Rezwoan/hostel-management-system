@@ -7,6 +7,6 @@ class AdminController
     {
         $pageTitle = 'Admin Dashboard';
         $message = 'Hello Admin, this is a demo controller.';
-        include __DIR__ . '/../../Views/Admin/dashboard.php';
+        include __DIR__ . '/../../Views/Admin/AdminDashboardView.php';
     }
 }

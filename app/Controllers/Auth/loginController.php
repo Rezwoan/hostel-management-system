@@ -1,20 +1,16 @@
 <?php
-// app/Controllers/Auth/loginController.php
+// app/Controllers/Auth/LoginController.php
 
-// FIX 1: Remove session_start() because index.php already started it.
-// session_start(); 
-
-// Ensure Model path is correct (From Controllers/Auth -> up to App -> Models)
-require_once __DIR__ . '/../../Models/auth_functions.php';
+require_once __DIR__ . '/../../Models/AuthModel.php';
 
 // 1. Redirect if ALREADY logged in
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
     if ($_SESSION['role'] === 'ADMIN') {
-        header("Location: index.php?page=admin_dashboard"); // FIX 2: Use Router Link
+        header("Location: index.php?page=admin_dashboard");
     } elseif ($_SESSION['role'] === 'MANAGER') {
-        header("Location: index.php?page=manager_dashboard"); // FIX 2: Use Router Link
+        header("Location: index.php?page=manager_dashboard");
     } elseif ($_SESSION['role'] === 'STUDENT') {
-        header("Location: index.php?page=student_dashboard"); // FIX 2: Use Router Link
+        header("Location: index.php?page=student_dashboard");
     }
     exit;
 }
@@ -43,15 +39,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if (in_array('ADMIN', $roles)) {
                 $_SESSION['role'] = 'ADMIN';
-                header("Location: index.php?page=admin_dashboard"); // FIX 2: Use Router Link
-            } 
-            elseif (in_array('MANAGER', $roles)) {
+                header("Location: index.php?page=admin_dashboard");
+            } elseif (in_array('MANAGER', $roles)) {
                 $_SESSION['role'] = 'MANAGER';
-                header("Location: index.php?page=manager_dashboard"); // FIX 2: Use Router Link
-            } 
-            elseif (in_array('STUDENT', $roles)) {
+                header("Location: index.php?page=manager_dashboard");
+            } elseif (in_array('STUDENT', $roles)) {
                 $_SESSION['role'] = 'STUDENT';
-                header("Location: index.php?page=student_dashboard"); // FIX 2: Use Router Link
+                header("Location: index.php?page=student_dashboard");
             } 
             else {
                 $error_msg = "Login failed: No valid role assigned to this account.";
@@ -65,8 +59,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// 3. Load the View
-// FIX 3: Correct Path. 
-// From 'app/Controllers/Auth' -> go up to 'app' (../../) -> 'Views/Auth/login_view.php'
-require_once __DIR__ . '/../../Views/Auth/login_view.php';
+require_once __DIR__ . '/../../Views/Auth/LoginView.php';
 ?>

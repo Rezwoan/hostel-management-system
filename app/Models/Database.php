@@ -1,5 +1,5 @@
 <?php
-// app/Models/DB_Connect.php
+// app/Models/Database.php
 
 // 1. DEFINE CREDENTIALS AS CONSTANTS
 // Constants are available globally automatically. No 'global $var' needed.

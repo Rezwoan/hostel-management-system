@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Hostel Management System</title>
-    <!-- Base Styles -->
     <link rel="stylesheet" href="public/assets/css/style.css">
-    <!-- View Specific Styles -->
-    <link rel="stylesheet" href="app/Views/Auth/css/login_view.css">
+    <link rel="stylesheet" href="app/Views/Auth/css/LoginView.css">
 </head>
 <body>
 
@@ -101,7 +99,6 @@
         </div>
     </div>
 
-    <!-- View Specific Scripts -->
-    <script src="app/Views/Auth/js/login_view.js"></script>
+    <script src="app/Views/Auth/js/LoginView.js"></script>
 </body>
 </html>

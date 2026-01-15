@@ -66,11 +66,11 @@ switch ($page) {
              exit;
         }
         // Load the Controller (which loads the View)
-        require_once __DIR__ . '/app/Controllers/Auth/loginController.php';
+        require_once __DIR__ . '/app/Controllers/Auth/LoginController.php';
         break;
 
     case 'signup':
-        require_once __DIR__ . '/app/Controllers/Auth/signupController.php';
+        require_once __DIR__ . '/app/Controllers/Auth/SignupController.php';
         break;
 
     case 'logout':
@@ -96,8 +96,7 @@ switch ($page) {
 
     case 'student_dashboard':
         require_role('STUDENT');
-        // Matches: app/Controllers/Student/student_dashboard.php
-        require_once __DIR__ . '/app/Controllers/Student/student_dashboard.php';
+        require_once __DIR__ . '/app/Controllers/Student/StudentController.php';
         break;
 
 

@@ -1,8 +1,7 @@
 <?php
-// app/Models/student_functions.php
+// app/Models/StudentModel.php
 
-// Ensure this path matches your file structure (Same folder)
-require_once __DIR__ . '/DB_Connect.php';
+require_once __DIR__ . '/Database.php';
 
 /**
  * Create a new student account (User + Role + Profile)

@@ -1,8 +1,7 @@
 <?php
-// app/Models/auth_functions.php
+// app/Models/AuthModel.php
 
-// Adjust path to point to your config file
-require_once __DIR__ . '/DB_Connect.php';
+require_once __DIR__ . '/Database.php';
 
 /**
  * Attempt to login a user

@@ -1,9 +1,5 @@
-/* ==============================================
-   LOGIN PAGE - View Specific Styles
-   File: app/Views/Auth/css/login_view.css
-   ============================================== */
+/* Signup Page Styles */
 
-/* Login Page Layout */
 .auth-page {
     min-height: 100vh;
     display: flex;
@@ -17,7 +13,10 @@
     max-width: 420px;
 }
 
-/* Logo Section */
+.auth-container.wide {
+    max-width: 550px;
+}
+
 .auth-logo {
     text-align: center;
     margin-bottom: 25px;
@@ -51,7 +50,6 @@
     margin-bottom: 0;
 }
 
-/* Login Card */
 .auth-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -66,27 +64,33 @@
     margin-bottom: 20px;
 }
 
-/* Form Options (Remember me / Forgot password) */
-.form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.form-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
     margin-bottom: 20px;
-    font-size: 14px;
 }
 
-.form-check {
+.form-section h4 {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.form-row {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    gap: 20px;
 }
 
-.form-check input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
+.form-row .form-group {
+    flex: 1;
 }
 
-/* Divider */
 .auth-divider {
     text-align: center;
     margin: 25px 0;
@@ -111,13 +115,11 @@
     font-size: 13px;
 }
 
-/* Links */
 .auth-link {
     text-align: center;
     font-size: 14px;
 }
 
-/* Page Footer */
 .page-footer {
     text-align: center;
     margin-top: 25px;
@@ -126,14 +128,11 @@
     color: var(--text-secondary);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-    .form-options {
+    .form-row {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        gap: 0;
     }
-    
     .auth-card {
         padding: 25px 20px;
     }
@@ -143,7 +142,6 @@
     .auth-page {
         padding: 20px 15px;
     }
-    
     .auth-card {
         padding: 20px 15px;
     }

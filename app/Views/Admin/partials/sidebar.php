@@ -1,59 +1,90 @@
 <?php
-// Admin Sidebar Partial
-// Include this in all admin views
-?>
-<aside class="admin-sidebar">
-    <div class="sidebar-header">
-        <h2>HMS Admin</h2>
-        <p>Hostel Management System</p>
+// Admin Contextual Sidebar
+// Shows sub-navigation based on the active section
+$currentPage = $page ?? '';
+
+// Determine which section we're in
+$userPages = ['admin_users', 'admin_students'];
+$hostelPages = ['admin_hostels', 'admin_hostel_managers', 'admin_floors', 'admin_room_types', 'admin_rooms', 'admin_seats'];
+$allocationPages = ['admin_applications', 'admin_allocations'];
+$financePages = ['admin_fee_periods', 'admin_invoices', 'admin_payments'];
+$supportPages = ['admin_complaint_categories', 'admin_complaints', 'admin_notices'];
+$systemPages = ['admin_audit_logs'];
+
+$showSidebar = false;
+$sidebarTitle = '';
+$sidebarLinks = [];
+
+if (in_array($currentPage, $userPages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'User Management';
+    $sidebarLinks = [
+        ['page' => 'admin_users', 'label' => 'All Users', 'icon' => '👥'],
+        ['page' => 'admin_students', 'label' => 'Students', 'icon' => '🎓'],
+        ['page' => 'admin_users&action=add', 'label' => '+ Add User', 'icon' => ''],
+    ];
+} elseif (in_array($currentPage, $hostelPages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'Hostel Management';
+    $sidebarLinks = [
+        ['page' => 'admin_hostels', 'label' => 'Hostels', 'icon' => '🏢'],
+        ['page' => 'admin_hostel_managers', 'label' => 'Managers', 'icon' => '👔'],
+        ['page' => 'admin_floors', 'label' => 'Floors', 'icon' => '🏗️'],
+        ['page' => 'admin_room_types', 'label' => 'Room Types', 'icon' => '🏷️'],
+        ['page' => 'admin_rooms', 'label' => 'Rooms', 'icon' => '🚪'],
+        ['page' => 'admin_seats', 'label' => 'Seats', 'icon' => '🛏️'],
+    ];
+} elseif (in_array($currentPage, $allocationPages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'Allocation';
+    $sidebarLinks = [
+        ['page' => 'admin_applications', 'label' => 'Applications', 'icon' => '📝'],
+        ['page' => 'admin_allocations', 'label' => 'Allocations', 'icon' => '✅'],
+        ['page' => 'admin_allocations&action=add', 'label' => '+ New Allocation', 'icon' => ''],
+    ];
+} elseif (in_array($currentPage, $financePages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'Finance';
+    $sidebarLinks = [
+        ['page' => 'admin_fee_periods', 'label' => 'Fee Periods', 'icon' => '📅'],
+        ['page' => 'admin_invoices', 'label' => 'Invoices', 'icon' => '📄'],
+        ['page' => 'admin_payments', 'label' => 'Payments', 'icon' => '💰'],
+        ['page' => 'admin_payments&action=add', 'label' => '+ Record Payment', 'icon' => ''],
+    ];
+} elseif (in_array($currentPage, $supportPages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'Support';
+    $sidebarLinks = [
+        ['page' => 'admin_complaints', 'label' => 'Complaints', 'icon' => '📢'],
+        ['page' => 'admin_complaint_categories', 'label' => 'Categories', 'icon' => '🏷️'],
+        ['page' => 'admin_notices', 'label' => 'Notices', 'icon' => '📌'],
+        ['page' => 'admin_notices&action=add', 'label' => '+ New Notice', 'icon' => ''],
+    ];
+} elseif (in_array($currentPage, $systemPages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'System';
+    $sidebarLinks = [
+        ['page' => 'admin_audit_logs', 'label' => 'Audit Logs', 'icon' => '📋'],
+    ];
+}
+
+if ($showSidebar): ?>
+<aside class="context-sidebar">
+    <div class="context-sidebar-header">
+        <h3><?php echo $sidebarTitle; ?></h3>
     </div>
-    
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <div class="nav-section-title">Main</div>
-            <a href="index.php?page=admin_dashboard" class="nav-link <?php echo ($page ?? '') === 'admin_dashboard' ? 'active' : ''; ?>">Dashboard</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">User Management</div>
-            <a href="index.php?page=admin_users" class="nav-link <?php echo ($page ?? '') === 'admin_users' ? 'active' : ''; ?>">Users</a>
-            <a href="index.php?page=admin_students" class="nav-link <?php echo ($page ?? '') === 'admin_students' ? 'active' : ''; ?>">Students</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Hostel Management</div>
-            <a href="index.php?page=admin_hostels" class="nav-link <?php echo ($page ?? '') === 'admin_hostels' ? 'active' : ''; ?>">Hostels</a>
-            <a href="index.php?page=admin_hostel_managers" class="nav-link <?php echo ($page ?? '') === 'admin_hostel_managers' ? 'active' : ''; ?>">Hostel Managers</a>
-            <a href="index.php?page=admin_floors" class="nav-link <?php echo ($page ?? '') === 'admin_floors' ? 'active' : ''; ?>">Floors</a>
-            <a href="index.php?page=admin_room_types" class="nav-link <?php echo ($page ?? '') === 'admin_room_types' ? 'active' : ''; ?>">Room Types</a>
-            <a href="index.php?page=admin_rooms" class="nav-link <?php echo ($page ?? '') === 'admin_rooms' ? 'active' : ''; ?>">Rooms</a>
-            <a href="index.php?page=admin_seats" class="nav-link <?php echo ($page ?? '') === 'admin_seats' ? 'active' : ''; ?>">Seats</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Applications & Allocations</div>
-            <a href="index.php?page=admin_applications" class="nav-link <?php echo ($page ?? '') === 'admin_applications' ? 'active' : ''; ?>">Applications</a>
-            <a href="index.php?page=admin_allocations" class="nav-link <?php echo ($page ?? '') === 'admin_allocations' ? 'active' : ''; ?>">Allocations</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Finance</div>
-            <a href="index.php?page=admin_fee_periods" class="nav-link <?php echo ($page ?? '') === 'admin_fee_periods' ? 'active' : ''; ?>">Fee Periods</a>
-            <a href="index.php?page=admin_invoices" class="nav-link <?php echo ($page ?? '') === 'admin_invoices' ? 'active' : ''; ?>">Invoices</a>
-            <a href="index.php?page=admin_payments" class="nav-link <?php echo ($page ?? '') === 'admin_payments' ? 'active' : ''; ?>">Payments</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">Support</div>
-            <a href="index.php?page=admin_complaint_categories" class="nav-link <?php echo ($page ?? '') === 'admin_complaint_categories' ? 'active' : ''; ?>">Complaint Categories</a>
-            <a href="index.php?page=admin_complaints" class="nav-link <?php echo ($page ?? '') === 'admin_complaints' ? 'active' : ''; ?>">Complaints</a>
-            <a href="index.php?page=admin_notices" class="nav-link <?php echo ($page ?? '') === 'admin_notices' ? 'active' : ''; ?>">Notices</a>
-        </div>
-        
-        <div class="nav-section">
-            <div class="nav-section-title">System</div>
-            <a href="index.php?page=admin_audit_logs" class="nav-link <?php echo ($page ?? '') === 'admin_audit_logs' ? 'active' : ''; ?>">Audit Logs</a>
-            <a href="index.php?page=logout" class="nav-link">Logout</a>
-        </div>
+    <nav class="context-sidebar-nav">
+        <?php foreach ($sidebarLinks as $link): 
+            $isActive = strpos($link['page'], '&') !== false 
+                ? false 
+                : ($currentPage === $link['page']);
+        ?>
+            <a href="index.php?page=<?php echo $link['page']; ?>" 
+               class="context-nav-link <?php echo $isActive ? 'active' : ''; ?> <?php echo strpos($link['page'], 'action=add') !== false ? 'add-link' : ''; ?>">
+                <?php if ($link['icon']): ?><span class="nav-icon"><?php echo $link['icon']; ?></span><?php endif; ?>
+                <?php echo $link['label']; ?>
+            </a>
+        <?php endforeach; ?>
     </nav>
 </aside>
+<?php endif; ?>

@@ -12,19 +12,12 @@ $page = 'admin_users';
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
 </head>
 <body>
+    <?php include __DIR__ . '/partials/header.php'; ?>
+    
     <div class="admin-layout">
         <?php include __DIR__ . '/partials/sidebar.php'; ?>
         
         <main class="admin-main">
-            <header class="admin-header">
-                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
-                <div class="header-actions">
-                    <div class="user-info">
-                        <span>Welcome, <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin'); ?></span>
-                    </div>
-                </div>
-            </header>
-            
             <div class="admin-content">
                 <?php if (!empty($message)): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
@@ -54,7 +47,8 @@ $page = 'admin_users';
                             
                             <div class="form-group">
                                 <label for="email">Email Address <span class="required">*</span></label>
-                                <input type="email" id="email" name="email" class="form-control" required>
+                                <input type="email" id="email" name="email" class="form-control validate-email" required>
+                                <span class="form-hint" id="emailFeedback"></span>
                             </div>
                             
                             <div class="form-group">
@@ -266,18 +260,14 @@ $page = 'admin_users';
                         <a href="index.php?page=admin_users&action=add" class="btn btn-primary">Add New User</a>
                     </div>
                     
+                    <!-- Live Search -->
                     <div class="search-box">
-                        <form action="index.php" method="GET" style="display: flex; gap: 10px;">
-                            <input type="hidden" name="page" value="admin_users">
-                            <input type="hidden" name="action" value="search">
-                            <input type="text" name="q" class="form-control" placeholder="Search users..." value="<?php echo htmlspecialchars($data['keyword'] ?? ''); ?>">
-                            <button type="submit" class="btn btn-primary">Search</button>
-                        </form>
+                        <input type="text" id="tableSearch" class="form-control" placeholder="Search users...">
                     </div>
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="usersTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -291,25 +281,24 @@ $page = 'admin_users';
                                 <tbody>
                                     <?php if (!empty($data['users'])): ?>
                                         <?php foreach ($data['users'] as $user): ?>
-                                            <tr>
+                                            <tr data-id="<?php echo (int)$user['id']; ?>">
                                                 <td><?php echo (int)$user['id']; ?></td>
                                                 <td><?php echo htmlspecialchars($user['name']); ?></td>
                                                 <td><?php echo htmlspecialchars($user['email']); ?></td>
                                                 <td><?php echo htmlspecialchars($user['roles'] ?? 'No Role'); ?></td>
                                                 <td>
-                                                    <span class="badge <?php echo $user['status'] === 'ACTIVE' ? 'badge-success' : 'badge-danger'; ?>">
+                                                    <button type="button" class="btn btn-sm toggle-status-btn <?php echo $user['status'] === 'ACTIVE' ? 'btn-success' : 'btn-danger'; ?>" 
+                                                            data-id="<?php echo (int)$user['id']; ?>"
+                                                            data-status="<?php echo htmlspecialchars($user['status']); ?>"
+                                                            onclick="toggleUserStatus(this)">
                                                         <?php echo htmlspecialchars($user['status']); ?>
-                                                    </span>
+                                                    </button>
                                                 </td>
                                                 <td>
                                                     <div class="action-btns">
                                                         <a href="index.php?page=admin_users&action=view&id=<?php echo (int)$user['id']; ?>" class="btn btn-sm btn-secondary">View</a>
                                                         <a href="index.php?page=admin_users&action=edit&id=<?php echo (int)$user['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
-                                                        <form action="index.php?page=admin_users" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                                            <input type="hidden" name="form_action" value="delete_user">
-                                                            <input type="hidden" name="id" value="<?php echo (int)$user['id']; ?>">
-                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteOptions(<?php echo (int)$user['id']; ?>, '<?php echo htmlspecialchars(addslashes($user['name'])); ?>', this)">Delete</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -327,5 +316,167 @@ $page = 'admin_users';
             </div>
         </main>
     </div>
+    
+    <!-- Delete Options Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Delete User</h3>
+            <p id="deleteUserName"></p>
+            <p style="margin-bottom: 15px;">Choose delete option:</p>
+            <div class="delete-options">
+                <button type="button" class="btn btn-warning" id="softDeleteBtn" style="width: 100%; margin-bottom: 10px;">
+                    <strong>Deactivate</strong><br>
+                    <small>Set user status to INACTIVE (can be reactivated later)</small>
+                </button>
+                <button type="button" class="btn btn-danger" id="hardDeleteBtn" style="width: 100%;">
+                    <strong>Permanently Delete</strong><br>
+                    <small>Remove user and all related data from database</small>
+                </button>
+            </div>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let pendingUserId = null;
+        let pendingRow = null;
+        
+        function showDeleteOptions(id, userName, btn) {
+            pendingUserId = id;
+            pendingRow = btn.closest("tr");
+            document.getElementById("deleteUserName").textContent = "User: " + userName;
+            document.getElementById("deleteModal").classList.add("open");
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById("deleteModal").classList.remove("open");
+            pendingUserId = null;
+            pendingRow = null;
+        }
+        
+        document.getElementById("softDeleteBtn").addEventListener("click", function() {
+            if (pendingUserId) doDelete(pendingUserId, "soft", pendingRow);
+            closeDeleteModal();
+        });
+        
+        document.getElementById("hardDeleteBtn").addEventListener("click", function() {
+            if (confirm("Are you ABSOLUTELY sure? This will permanently delete the user and ALL their data!")) {
+                if (pendingUserId) doDelete(pendingUserId, "hard", pendingRow);
+                closeDeleteModal();
+            }
+        });
+        
+        function doDelete(id, type, row) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "app/Controllers/Api/delete_user.php", true);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {
+                        try {
+                            let response = JSON.parse(this.responseText);
+                            if (response.success) {
+                                row.style.transition = "opacity 0.3s";
+                                row.style.opacity = "0";
+                                setTimeout(function() { row.remove(); }, 300);
+                            } else {
+                                alert("Error: " + response.error);
+                            }
+                        } catch (e) {
+                            alert("Server error: " + this.responseText);
+                        }
+                    } else {
+                        alert("Request failed with status: " + this.status);
+                    }
+                }
+            };
+            
+            xhr.send("id=" + id + "&type=" + type);
+        }
+        }
+        
+        // Toggle user status via AJAX
+        function toggleUserStatus(btn) {
+            let id = btn.getAttribute("data-id");
+            let currentStatus = btn.getAttribute("data-status");
+            let newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+            
+            btn.disabled = true;
+            
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "app/Controllers/Api/update_user_status.php", true);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let response = JSON.parse(this.responseText);
+                    btn.disabled = false;
+                    
+                    if (response.success) {
+                        btn.setAttribute("data-status", newStatus);
+                        btn.textContent = newStatus;
+                        btn.className = "btn btn-sm toggle-status-btn " + (newStatus === "ACTIVE" ? "btn-success" : "btn-danger");
+                    } else {
+                        alert("Error: " + response.error);
+                    }
+                }
+            };
+            
+            xhr.send("id=" + id + "&status=" + newStatus);
+        }
+        
+        // Email validation on Add User form
+        let emailTimer;
+        let emailInput = document.querySelector(".validate-email");
+        let emailFeedback = document.getElementById("emailFeedback");
+        
+        if (emailInput && emailFeedback) {
+            emailInput.addEventListener("keyup", function() {
+                clearTimeout(emailTimer);
+                let email = this.value.trim();
+                
+                if (!email || !email.includes("@")) {
+                    emailFeedback.textContent = "";
+                    return;
+                }
+                
+                emailTimer = setTimeout(function() {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open("GET", "app/Controllers/Api/check_email.php?email=" + encodeURIComponent(email), true);
+                    
+                    xhr.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            let response = JSON.parse(this.responseText);
+                            if (response.success) {
+                                if (response.exists) {
+                                    emailFeedback.textContent = "✗ Email already exists";
+                                    emailFeedback.style.color = "#dc3545";
+                                } else {
+                                    emailFeedback.textContent = "✓ Email available";
+                                    emailFeedback.style.color = "#28a745";
+                                }
+                            }
+                        }
+                    };
+                    
+                    xhr.send();
+                }, 500);
+            });
+        }
+        
+        // Table search
+        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
+            let query = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#usersTable tbody tr");
+            
+            rows.forEach(function(row) {
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
+        });
+    </script>
 </body>
 </html>

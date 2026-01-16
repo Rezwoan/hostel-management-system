@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formAction = isset($_POST['form_action']) ? $_POST['form_action'] : '';
     
     if ($formAction === 'create_allocation') {
-        $studentUserId = (int)$_POST['student_user_id'];
+        $studentUserId = isset($_POST['student_id']) ? (int)$_POST['student_id'] : (int)$_POST['student_user_id'];
         $seatId = (int)$_POST['seat_id'];
         $hostelId = (int)$_POST['hostel_id'];
         $startDate = $_POST['start_date'];

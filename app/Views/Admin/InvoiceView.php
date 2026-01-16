@@ -12,14 +12,12 @@ $page = 'admin_invoices';
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
 </head>
 <body>
+    <?php include __DIR__ . '/partials/header.php'; ?>
+    
     <div class="admin-layout">
         <?php include __DIR__ . '/partials/sidebar.php'; ?>
         
         <main class="admin-main">
-            <header class="admin-header">
-                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
-            </header>
-            
             <div class="admin-content">
                 <?php if (!empty($message)): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
@@ -356,9 +354,14 @@ $page = 'admin_invoices';
                         </div>
                     </div>
                     
+                    <!-- Live Search -->
+                    <div class="search-box" style="margin-bottom: 15px;">
+                        <input type="text" id="tableSearch" class="form-control" placeholder="Search invoices...">
+                    </div>
+                    
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="invoicesTable">
                                 <thead>
                                     <tr>
                                         <th>Invoice #</th>
@@ -380,7 +383,7 @@ $page = 'admin_invoices';
                                             $paidAmount = (float)($invoice['paid_amount'] ?? 0);
                                             $balance = $amountDue - $paidAmount;
                                             ?>
-                                            <tr>
+                                            <tr data-id="<?php echo (int)$invoice['id']; ?>">
                                                 <td><?php echo htmlspecialchars('INV-' . $invoice['id']); ?></td>
                                                 <td>
                                                     <?php echo htmlspecialchars($invoice['student_name'] ?? ''); ?><br>
@@ -396,13 +399,11 @@ $page = 'admin_invoices';
                                                     $status = $invoice['status'] ?? '';
                                                     $statusClass = 'badge-warning';
                                                     if ($status === 'PAID') $statusClass = 'badge-success';
-                                                    elseif ($status === 'PARTIAL') $statusClass = 'badge-info';
                                                     elseif ($status === 'OVERDUE') $statusClass = 'badge-danger';
+                                                    elseif ($status === 'PARTIAL') $statusClass = 'badge-info';
                                                     elseif ($status === 'CANCELLED' || $status === 'WAIVED') $statusClass = 'badge-secondary';
                                                     ?>
-                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo htmlspecialchars($status); ?>
-                                                    </span>
+                                                    <span class="badge <?php echo $statusClass; ?>"><?php echo htmlspecialchars($status); ?></span>
                                                 </td>
                                                 <td>
                                                     <div class="action-btns">
@@ -411,18 +412,14 @@ $page = 'admin_invoices';
                                                         <?php if ($status !== 'PAID'): ?>
                                                             <a href="index.php?page=admin_payments&action=add&invoice_id=<?php echo (int)$invoice['id']; ?>" class="btn btn-sm btn-success">Pay</a>
                                                         <?php endif; ?>
-                                                        <form action="index.php?page=admin_invoices" method="POST" style="display:inline;" onsubmit="return confirm('Delete this invoice? This cannot be undone.');">
-                                                            <input type="hidden" name="form_action" value="delete_invoice">
-                                                            <input type="hidden" name="id" value="<?php echo (int)$invoice['id']; ?>">
-                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteInvoice(<?php echo (int)$invoice['id']; ?>, this)">Delete</button>
                                                     </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="7" class="empty-state">No invoices found</td>
+                                            <td colspan="9" class="empty-state">No invoices found</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -433,5 +430,85 @@ $page = 'admin_invoices';
             </div>
         </main>
     </div>
+    
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let pendingAction = null;
+        let pendingRow = null;
+        
+        function showConfirm(title, message, callback) {
+            document.getElementById("confirmTitle").textContent = title;
+            document.getElementById("confirmMessage").textContent = message;
+            document.getElementById("confirmModal").classList.add("open");
+            pendingAction = callback;
+        }
+        
+        function closeModal() {
+            document.getElementById("confirmModal").classList.remove("open");
+            pendingAction = null;
+            pendingRow = null;
+        }
+        
+        document.getElementById("confirmBtn").addEventListener("click", function() {
+            if (pendingAction) pendingAction();
+            closeModal();
+        });
+        
+        // Delete invoice via AJAX
+        function deleteInvoice(id, btn) {
+            let rowToDelete = btn.closest("tr");
+            
+            showConfirm("Delete Invoice", "Delete this invoice? This cannot be undone.", function() {
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", "app/Controllers/Api/delete_invoice.php", true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4) {
+                        if (this.status == 200) {
+                            try {
+                                let response = JSON.parse(this.responseText);
+                                if (response.success) {
+                                    rowToDelete.style.transition = "opacity 0.3s";
+                                    rowToDelete.style.opacity = "0";
+                                    setTimeout(function() { rowToDelete.remove(); }, 300);
+                                } else {
+                                    alert("Error: " + response.error);
+                                }
+                            } catch (e) {
+                                alert("Server error: " + this.responseText);
+                            }
+                        } else {
+                            alert("Request failed with status: " + this.status);
+                        }
+                    }
+                };
+                
+                xhr.send("id=" + id);
+            });
+        }
+        
+        // Table search
+        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
+            let query = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#invoicesTable tbody tr");
+            
+            rows.forEach(function(row) {
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
+        });
+    </script>
 </body>
 </html>

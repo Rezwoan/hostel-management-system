@@ -46,6 +46,7 @@ if ($action === 'view') {
     $pageTitle = 'View Application';
 } else {
     $data['applications'] = getAllRoomApplications();
+    $data['stats'] = getApplicationStats();
 }
 
 // Handle success messages

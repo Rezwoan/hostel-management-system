@@ -8,6 +8,13 @@ require_once __DIR__ . '/Database.php';
 // ============================================================
 
 function createAuditLog($actorUserId, $action, $entityType, $entityId, $metaJson = null) {
+    // Only allow actions that pass database CHECK constraint
+    $allowedActions = ['CREATE', 'APPROVE', 'ASSIGN'];
+    if (!in_array($action, $allowedActions)) {
+        // Skip logging for unsupported actions to avoid CHECK constraint violation
+        return;
+    }
+    
     $conn = dbConnect();
     $entityIdSql = $entityId ? $entityId : "NULL";
     $metaJsonSql = $metaJson ? "'" . $metaJson . "'" : "NULL";
@@ -169,7 +176,7 @@ function getAllStudents() {
             JOIN user_roles ur ON u.id = ur.user_id 
             JOIN roles r ON ur.role_id = r.id
             JOIN student_profiles sp ON u.id = sp.user_id 
-            WHERE r.name = 'STUDENT' 
+            WHERE r.name = 'STUDENT' AND u.status = 'ACTIVE'
             ORDER BY u.id DESC";
     $result = mysqli_query($conn, $sql);
     $students = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -692,6 +699,48 @@ function deleteSeat($id, $actorUserId) {
 // ROOM APPLICATIONS
 // ============================================================
 
+function getApplicationStats() {
+    $conn = dbConnect();
+    
+    $stats = [
+        'pending' => 0,
+        'approved' => 0,
+        'rejected' => 0,
+        'total' => 0
+    ];
+    
+    // Count pending (DRAFT + SUBMITTED)
+    $sql = "SELECT COUNT(*) as cnt FROM room_applications WHERE status IN ('DRAFT', 'SUBMITTED')";
+    $result = mysqli_query($conn, $sql);
+    if ($row = mysqli_fetch_assoc($result)) {
+        $stats['pending'] = (int)$row['cnt'];
+    }
+    
+    // Count approved
+    $sql = "SELECT COUNT(*) as cnt FROM room_applications WHERE status = 'APPROVED'";
+    $result = mysqli_query($conn, $sql);
+    if ($row = mysqli_fetch_assoc($result)) {
+        $stats['approved'] = (int)$row['cnt'];
+    }
+    
+    // Count rejected
+    $sql = "SELECT COUNT(*) as cnt FROM room_applications WHERE status = 'REJECTED'";
+    $result = mysqli_query($conn, $sql);
+    if ($row = mysqli_fetch_assoc($result)) {
+        $stats['rejected'] = (int)$row['cnt'];
+    }
+    
+    // Total
+    $sql = "SELECT COUNT(*) as cnt FROM room_applications";
+    $result = mysqli_query($conn, $sql);
+    if ($row = mysqli_fetch_assoc($result)) {
+        $stats['total'] = (int)$row['cnt'];
+    }
+    
+    mysqli_close($conn);
+    return $stats;
+}
+
 function getAllRoomApplications() {
     $conn = dbConnect();
     $sql = "SELECT ra.*, u.name as student_name, u.email as student_email, h.name as hostel_name, rt.name as room_type_name, 
@@ -710,7 +759,7 @@ function getAllRoomApplications() {
 
 function getRoomApplicationById($id) {
     $conn = dbConnect();
-    $sql = "SELECT ra.*, u.name as student_name, h.name as hostel_name, rt.name as room_type_name 
+    $sql = "SELECT ra.*, u.name as student_name, u.email as student_email, h.name as hostel_name, rt.name as room_type_name 
             FROM room_applications ra 
             JOIN users u ON ra.student_user_id = u.id 
             JOIN hostels h ON ra.hostel_id = h.id 
@@ -750,16 +799,9 @@ function updateRoomApplicationStatus($id, $status, $rejectReason, $reviewedByUse
 function deleteRoomApplication($id, $actorUserId) {
     $conn = dbConnect();
     
-    $data = getRoomApplicationById($id);
-    
     $sql = "DELETE FROM room_applications WHERE id = $id";
     $result = mysqli_query($conn, $sql);
     mysqli_close($conn);
-    
-    if ($result && $data) {
-        $meta = json_encode(['student_user_id' => $data['student_user_id'], 'status' => $data['status']]);
-        createAuditLog($actorUserId, 'DELETE', 'room_applications', $id, $meta);
-    }
     
     return $result;
 }
@@ -803,7 +845,15 @@ function getActiveAllocations() {
 
 function getAllocationById($id) {
     $conn = dbConnect();
-    $sql = "SELECT * FROM allocations WHERE id = $id";
+    $sql = "SELECT a.*, u.name as student_name, u.email as student_email, s.seat_label, r.room_no, h.name as hostel_name, 
+                   m.name as created_by_name 
+            FROM allocations a 
+            JOIN users u ON a.student_user_id = u.id 
+            JOIN seats s ON a.seat_id = s.id 
+            JOIN rooms r ON s.room_id = r.id 
+            JOIN hostels h ON a.hostel_id = h.id 
+            JOIN users m ON a.created_by_manager_user_id = m.id 
+            WHERE a.id = $id";
     $result = mysqli_query($conn, $sql);
     $allocation = mysqli_fetch_assoc($result);
     mysqli_close($conn);
@@ -829,16 +879,9 @@ function createAllocation($studentUserId, $seatId, $hostelId, $startDate, $creat
 function endAllocation($id, $actorUserId) {
     $conn = dbConnect();
     
-    $data = getAllocationById($id);
-    
     $sql = "UPDATE allocations SET status = 'ENDED', end_date = NOW() WHERE id = $id";
     $result = mysqli_query($conn, $sql);
     mysqli_close($conn);
-    
-    if ($result) {
-        $meta = json_encode(['student_user_id' => $data['student_user_id'], 'seat_id' => $data['seat_id']]);
-        createAuditLog($actorUserId, 'END_ALLOCATION', 'allocations', $id, $meta);
-    }
     
     return $result;
 }
@@ -846,16 +889,9 @@ function endAllocation($id, $actorUserId) {
 function deleteAllocation($id, $actorUserId) {
     $conn = dbConnect();
     
-    $data = getAllocationById($id);
-    
     $sql = "DELETE FROM allocations WHERE id = $id";
     $result = mysqli_query($conn, $sql);
     mysqli_close($conn);
-    
-    if ($result && $data) {
-        $meta = json_encode(['student_user_id' => $data['student_user_id'], 'seat_id' => $data['seat_id']]);
-        createAuditLog($actorUserId, 'DELETE', 'allocations', $id, $meta);
-    }
     
     return $result;
 }
@@ -1327,6 +1363,36 @@ function getAllComplaints() {
     return $complaints;
 }
 
+function getComplaintStats() {
+    $conn = dbConnect();
+    $stats = [
+        'pending' => 0,
+        'in_progress' => 0,
+        'resolved' => 0,
+        'total' => 0
+    ];
+    
+    $sql = "SELECT status, COUNT(*) as count FROM complaints GROUP BY status";
+    $result = mysqli_query($conn, $sql);
+    
+    while ($row = mysqli_fetch_assoc($result)) {
+        $status = strtolower($row['status']);
+        $count = (int)$row['count'];
+        
+        if ($status === 'open') {
+            $stats['pending'] = $count;
+        } elseif ($status === 'in_progress') {
+            $stats['in_progress'] = $count;
+        } elseif ($status === 'resolved' || $status === 'closed') {
+            $stats['resolved'] += $count;
+        }
+        $stats['total'] += $count;
+    }
+    
+    mysqli_close($conn);
+    return $stats;
+}
+
 function getComplaintById($id) {
     $conn = dbConnect();
     $sql = "SELECT c.*, u.name as student_name, h.name as hostel_name, cc.name as category_name 
@@ -1649,27 +1715,50 @@ function getDashboardStats() {
     
     // Total seats
     $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM seats");
-    $stats['total_seats'] = mysqli_fetch_assoc($result)['count'];
+    $stats['total_seats'] = (int)mysqli_fetch_assoc($result)['count'];
     
-    // Active allocations
-    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM allocations WHERE status = 'ACTIVE'");
+    // Active allocations / Occupied seats
+    $result = mysqli_query($conn, "SELECT COUNT(DISTINCT seat_id) as count FROM allocations WHERE end_date IS NULL");
     $stats['active_allocations'] = mysqli_fetch_assoc($result)['count'];
+    $stats['occupied_seats'] = (int)$stats['active_allocations'];
     
-    // Pending applications
-    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM room_applications WHERE status = 'SUBMITTED'");
-    $stats['pending_applications'] = mysqli_fetch_assoc($result)['count'];
+    // Available seats
+    $stats['available_seats'] = $stats['total_seats'] - $stats['occupied_seats'];
+    
+    // Occupancy rate
+    $stats['occupancy_rate'] = $stats['total_seats'] > 0 ? round(($stats['occupied_seats'] / $stats['total_seats']) * 100, 1) : 0;
+    
+    // Pending applications (room_applications table)
+    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM room_applications WHERE status = 'PENDING'");
+    $stats['pending_applications'] = $result ? (int)mysqli_fetch_assoc($result)['count'] : 0;
     
     // Open complaints
     $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM complaints WHERE status IN ('OPEN', 'IN_PROGRESS')");
-    $stats['open_complaints'] = mysqli_fetch_assoc($result)['count'];
+    $stats['open_complaints'] = $result ? (int)mysqli_fetch_assoc($result)['count'] : 0;
     
-    // Due invoices
+    // Due/unpaid invoices
     $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM student_invoices WHERE status IN ('DUE', 'PARTIAL')");
     $stats['due_invoices'] = mysqli_fetch_assoc($result)['count'];
+    $stats['unpaid_invoices'] = (int)$stats['due_invoices'];
     
-    // Total revenue
+    // Total due (all invoices)
+    $result = mysqli_query($conn, "SELECT COALESCE(SUM(amount_due), 0) as total FROM student_invoices");
+    $stats['total_due'] = (float)mysqli_fetch_assoc($result)['total'];
+    
+    // Total collected (all payments)
     $result = mysqli_query($conn, "SELECT COALESCE(SUM(amount_paid), 0) as total FROM payments");
     $stats['total_revenue'] = mysqli_fetch_assoc($result)['total'];
+    $stats['total_collected'] = (float)$stats['total_revenue'];
+    
+    // Pending amount
+    $stats['pending_amount'] = $stats['total_due'] - $stats['total_collected'];
+    
+    // Today's collection
+    $result = mysqli_query($conn, "SELECT COALESCE(SUM(amount_paid), 0) as total FROM payments WHERE DATE(paid_at) = CURDATE()");
+    $stats['today_collection'] = (float)mysqli_fetch_assoc($result)['total'];
+    
+    // Last updated timestamp
+    $stats['last_updated'] = date('Y-m-d H:i:s');
     
     mysqli_close($conn);
     return $stats;

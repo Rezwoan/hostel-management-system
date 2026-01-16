@@ -61,6 +61,7 @@ if ($action === 'view') {
     $pageTitle = 'View Complaint';
 } else {
     $data['complaints'] = getAllComplaints();
+    $data['stats'] = getComplaintStats();
 }
 
 // Handle success messages

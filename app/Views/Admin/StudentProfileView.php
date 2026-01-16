@@ -12,14 +12,12 @@ $page = 'admin_students';
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
 </head>
 <body>
+    <?php include __DIR__ . '/partials/header.php'; ?>
+    
     <div class="admin-layout">
         <?php include __DIR__ . '/partials/sidebar.php'; ?>
         
         <main class="admin-main">
-            <header class="admin-header">
-                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
-            </header>
-            
             <div class="admin-content">
                 <?php if (!empty($message)): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>

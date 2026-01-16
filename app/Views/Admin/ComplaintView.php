@@ -12,14 +12,12 @@ $page = 'admin_complaints';
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
 </head>
 <body>
+    <?php include __DIR__ . '/partials/header.php'; ?>
+    
     <div class="admin-layout">
         <?php include __DIR__ . '/partials/sidebar.php'; ?>
         
         <main class="admin-main">
-            <header class="admin-header">
-                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
-            </header>
-            
             <div class="admin-content">
                 <?php if (!empty($message)): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
@@ -226,10 +224,10 @@ $page = 'admin_complaints';
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="complaintsTableBody">
                                     <?php if (!empty($data['complaints'])): ?>
                                         <?php foreach ($data['complaints'] as $complaint): ?>
-                                            <tr>
+                                            <tr data-id="<?php echo (int)$complaint['id']; ?>">
                                                 <td><?php echo (int)$complaint['id']; ?></td>
                                                 <td><?php echo htmlspecialchars(substr($complaint['subject'], 0, 30)); ?><?php echo strlen($complaint['subject']) > 30 ? '...' : ''; ?></td>
                                                 <td><?php echo htmlspecialchars($complaint['category_name'] ?? ''); ?></td>
@@ -247,19 +245,18 @@ $page = 'admin_complaints';
                                                 </td>
                                                 <td>
                                                     <?php 
-                                                    $status = $complaint['status'] ?? '';
+                                                    $status = $complaint['status'] ?? 'OPEN';
                                                     $statusClass = 'badge-warning';
                                                     if ($status === 'RESOLVED') $statusClass = 'badge-success';
-                                                    elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                                     elseif ($status === 'CLOSED') $statusClass = 'badge-secondary';
+                                                    elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                                     ?>
-                                                    <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo htmlspecialchars($status); ?>
-                                                    </span>
+                                                    <span class="badge <?php echo $statusClass; ?>"><?php echo htmlspecialchars($status); ?></span>
                                                 </td>
                                                 <td><?php echo htmlspecialchars($complaint['created_at'] ?? ''); ?></td>
                                                 <td>
                                                     <a href="index.php?page=admin_complaints&action=view&id=<?php echo (int)$complaint['id']; ?>" class="btn btn-sm btn-secondary">View</a>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteComplaint(<?php echo (int)$complaint['id']; ?>, this)">Delete</button>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -276,5 +273,85 @@ $page = 'admin_complaints';
             </div>
         </main>
     </div>
+    
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let pendingAction = null;
+        let pendingRow = null;
+        
+        function showConfirm(title, message, callback) {
+            document.getElementById("confirmTitle").textContent = title;
+            document.getElementById("confirmMessage").textContent = message;
+            document.getElementById("confirmModal").classList.add("open");
+            pendingAction = callback;
+        }
+        
+        function closeModal() {
+            document.getElementById("confirmModal").classList.remove("open");
+            pendingAction = null;
+            pendingRow = null;
+        }
+        
+        document.getElementById("confirmBtn").addEventListener("click", function() {
+            if (pendingAction) pendingAction();
+            closeModal();
+        });
+        
+        // Delete complaint via AJAX
+        function deleteComplaint(id, btn) {
+            let rowToDelete = btn.closest("tr");
+            
+            showConfirm("Delete Complaint", "Are you sure you want to delete this complaint?", function() {
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", "app/Controllers/Api/delete_complaint.php", true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4) {
+                        if (this.status == 200) {
+                            try {
+                                let response = JSON.parse(this.responseText);
+                                if (response.success) {
+                                    rowToDelete.style.transition = "opacity 0.3s";
+                                    rowToDelete.style.opacity = "0";
+                                    setTimeout(function() { rowToDelete.remove(); }, 300);
+                                } else {
+                                    alert("Error: " + response.error);
+                                }
+                            } catch (e) {
+                                alert("Server error: " + this.responseText);
+                            }
+                        } else {
+                            alert("Request failed with status: " + this.status);
+                        }
+                    }
+                };
+                
+                xhr.send("id=" + id);
+            });
+        }
+        
+        // Simple table search filter
+        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
+            let query = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#complaintsTableBody tr");
+            
+            rows.forEach(function(row) {
+                let text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
+        });
+    </script>
 </body>
 </html>

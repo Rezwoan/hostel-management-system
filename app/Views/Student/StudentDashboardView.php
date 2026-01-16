@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Hostel Management System</title>
+    <?php 
+    $pageTitle = 'Student Dashboard';
+    $pageDescription = 'Student portal for hostel management. View your room allocation, file complaints, and manage your hostel stay.';
+    include __DIR__ . '/../partials/meta.php'; 
+    ?>
 </head>
 <body>
 

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jan 15, 2026 at 05:40 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost:3306
+-- Generation Time: Jan 16, 2026 at 06:10 AM
+-- Server version: 8.0.43-cll-lve
+-- PHP Version: 8.4.11
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `hostel-management-system_DB`
+-- Database: `rezwoanm_hostel-management-system`
 --
 
 -- --------------------------------------------------------
@@ -28,17 +28,17 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `allocations` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `student_user_id` bigint(20) UNSIGNED NOT NULL,
-  `seat_id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `student_user_id` bigint UNSIGNED NOT NULL,
+  `seat_id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
   `start_date` datetime NOT NULL,
   `end_date` datetime DEFAULT NULL,
-  `status` enum('ACTIVE','ENDED') NOT NULL DEFAULT 'ACTIVE',
-  `created_by_manager_user_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `student_active_flag` tinyint(4) GENERATED ALWAYS AS (if(`status` = 'ACTIVE',1,NULL)) STORED,
-  `seat_active_flag` tinyint(4) GENERATED ALWAYS AS (if(`status` = 'ACTIVE',1,NULL)) STORED
+  `status` enum('ACTIVE','ENDED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `created_by_manager_user_id` bigint UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `student_active_flag` tinyint GENERATED ALWAYS AS (if((`status` = _utf8mb4'ACTIVE'),1,NULL)) STORED,
+  `seat_active_flag` tinyint GENERATED ALWAYS AS (if((`status` = _utf8mb4'ACTIVE'),1,NULL)) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -56,14 +56,14 @@ INSERT INTO `allocations` (`id`, `student_user_id`, `seat_id`, `hostel_id`, `sta
 --
 
 CREATE TABLE `audit_logs` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `actor_user_id` bigint(20) UNSIGNED NOT NULL,
-  `action` varchar(120) NOT NULL,
-  `entity_type` varchar(120) NOT NULL,
-  `entity_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `meta_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta_json`)),
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `id` bigint UNSIGNED NOT NULL,
+  `actor_user_id` bigint UNSIGNED NOT NULL,
+  `action` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_type` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_id` bigint UNSIGNED DEFAULT NULL,
+  `meta_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ;
 
 --
 -- Dumping data for table `audit_logs`
@@ -81,15 +81,15 @@ INSERT INTO `audit_logs` (`id`, `actor_user_id`, `action`, `entity_type`, `entit
 --
 
 CREATE TABLE `complaints` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `student_user_id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
-  `category_id` bigint(20) UNSIGNED NOT NULL,
-  `subject` varchar(200) NOT NULL,
-  `description` text NOT NULL,
-  `status` enum('OPEN','IN_PROGRESS','RESOLVED','CLOSED') NOT NULL DEFAULT 'OPEN',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `student_user_id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
+  `category_id` bigint UNSIGNED NOT NULL,
+  `subject` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('OPEN','IN_PROGRESS','RESOLVED','CLOSED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OPEN',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -106,8 +106,8 @@ INSERT INTO `complaints` (`id`, `student_user_id`, `hostel_id`, `category_id`, `
 --
 
 CREATE TABLE `complaint_categories` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(80) NOT NULL
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -126,11 +126,11 @@ INSERT INTO `complaint_categories` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `complaint_messages` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `complaint_id` bigint(20) UNSIGNED NOT NULL,
-  `sender_user_id` bigint(20) UNSIGNED NOT NULL,
-  `message` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `complaint_id` bigint UNSIGNED NOT NULL,
+  `sender_user_id` bigint UNSIGNED NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -148,8 +148,8 @@ INSERT INTO `complaint_messages` (`id`, `complaint_id`, `sender_user_id`, `messa
 --
 
 CREATE TABLE `fee_periods` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(50) NOT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -168,11 +168,11 @@ INSERT INTO `fee_periods` (`id`, `name`, `start_date`, `end_date`) VALUES
 --
 
 CREATE TABLE `floors` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
-  `floor_no` int(11) NOT NULL,
-  `label` varchar(50) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
+  `floor_no` int NOT NULL,
+  `label` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -190,13 +190,13 @@ INSERT INTO `floors` (`id`, `hostel_id`, `floor_no`, `label`, `created_at`) VALU
 --
 
 CREATE TABLE `hostels` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `code` varchar(50) NOT NULL,
-  `address` text DEFAULT NULL,
-  `status` enum('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('ACTIVE','INACTIVE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -213,10 +213,10 @@ INSERT INTO `hostels` (`id`, `name`, `code`, `address`, `status`, `created_at`, 
 --
 
 CREATE TABLE `hostel_managers` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
-  `manager_user_id` bigint(20) UNSIGNED NOT NULL,
-  `assigned_at` datetime NOT NULL DEFAULT current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
+  `manager_user_id` bigint UNSIGNED NOT NULL,
+  `assigned_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -233,16 +233,16 @@ INSERT INTO `hostel_managers` (`id`, `hostel_id`, `manager_user_id`, `assigned_a
 --
 
 CREATE TABLE `notices` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `scope` enum('GLOBAL','HOSTEL') NOT NULL DEFAULT 'GLOBAL',
-  `hostel_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `title` varchar(200) NOT NULL,
-  `body` text NOT NULL,
-  `status` enum('PUBLISHED','ARCHIVED') NOT NULL DEFAULT 'PUBLISHED',
+  `id` bigint UNSIGNED NOT NULL,
+  `scope` enum('GLOBAL','HOSTEL') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'GLOBAL',
+  `hostel_id` bigint UNSIGNED DEFAULT NULL,
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('PUBLISHED','ARCHIVED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PUBLISHED',
   `publish_at` datetime DEFAULT NULL,
   `expire_at` datetime DEFAULT NULL,
-  `created_by_user_id` bigint(20) UNSIGNED NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_by_user_id` bigint UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -282,13 +282,13 @@ DELIMITER ;
 --
 
 CREATE TABLE `payments` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `invoice_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `invoice_id` bigint UNSIGNED NOT NULL,
   `amount_paid` decimal(10,2) NOT NULL,
-  `method` enum('CASH','BKASH','BANK','OTHER') NOT NULL,
-  `reference_no` varchar(120) DEFAULT NULL,
-  `recorded_by_user_id` bigint(20) UNSIGNED NOT NULL,
-  `paid_at` datetime NOT NULL DEFAULT current_timestamp()
+  `method` enum('CASH','BKASH','BANK','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reference_no` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `recorded_by_user_id` bigint UNSIGNED NOT NULL,
+  `paid_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -306,8 +306,8 @@ INSERT INTO `payments` (`id`, `invoice_id`, `amount_paid`, `method`, `reference_
 --
 
 CREATE TABLE `roles` (
-  `id` smallint(5) UNSIGNED NOT NULL,
-  `name` varchar(50) NOT NULL
+  `id` smallint UNSIGNED NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -326,13 +326,13 @@ INSERT INTO `roles` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `rooms` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `floor_id` bigint(20) UNSIGNED NOT NULL,
-  `room_type_id` bigint(20) UNSIGNED NOT NULL,
-  `room_no` varchar(30) NOT NULL,
-  `capacity` int(11) NOT NULL,
-  `status` enum('ACTIVE','MAINTENANCE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `floor_id` bigint UNSIGNED NOT NULL,
+  `room_type_id` bigint UNSIGNED NOT NULL,
+  `room_no` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `capacity` int NOT NULL,
+  `status` enum('ACTIVE','MAINTENANCE','INACTIVE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -351,17 +351,17 @@ INSERT INTO `rooms` (`id`, `floor_id`, `room_type_id`, `room_no`, `capacity`, `s
 --
 
 CREATE TABLE `room_applications` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `student_user_id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
-  `preferred_room_type_id` bigint(20) UNSIGNED NOT NULL,
-  `status` enum('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED') NOT NULL DEFAULT 'DRAFT',
-  `notes` text DEFAULT NULL,
-  `reject_reason` text DEFAULT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `student_user_id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
+  `preferred_room_type_id` bigint UNSIGNED NOT NULL,
+  `status` enum('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DRAFT',
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `reject_reason` text COLLATE utf8mb4_unicode_ci,
   `submitted_at` datetime DEFAULT NULL,
   `reviewed_at` datetime DEFAULT NULL,
-  `reviewed_by_manager_user_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `reviewed_by_manager_user_id` bigint UNSIGNED DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -379,11 +379,11 @@ INSERT INTO `room_applications` (`id`, `student_user_id`, `hostel_id`, `preferre
 --
 
 CREATE TABLE `room_types` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `default_capacity` int(11) NOT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `default_capacity` int NOT NULL,
   `default_fee` decimal(10,2) NOT NULL,
-  `description` text DEFAULT NULL
+  `description` text COLLATE utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -401,10 +401,10 @@ INSERT INTO `room_types` (`id`, `name`, `default_capacity`, `default_fee`, `desc
 --
 
 CREATE TABLE `seats` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `room_id` bigint(20) UNSIGNED NOT NULL,
-  `seat_label` varchar(20) NOT NULL,
-  `status` enum('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE'
+  `id` bigint UNSIGNED NOT NULL,
+  `room_id` bigint UNSIGNED NOT NULL,
+  `seat_label` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('ACTIVE','INACTIVE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -425,13 +425,13 @@ INSERT INTO `seats` (`id`, `room_id`, `seat_label`, `status`) VALUES
 --
 
 CREATE TABLE `student_invoices` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `student_user_id` bigint(20) UNSIGNED NOT NULL,
-  `hostel_id` bigint(20) UNSIGNED NOT NULL,
-  `period_id` bigint(20) UNSIGNED NOT NULL,
+  `id` bigint UNSIGNED NOT NULL,
+  `student_user_id` bigint UNSIGNED NOT NULL,
+  `hostel_id` bigint UNSIGNED NOT NULL,
+  `period_id` bigint UNSIGNED NOT NULL,
   `amount_due` decimal(10,2) NOT NULL,
-  `status` enum('DUE','PARTIAL','PAID','WAIVED') NOT NULL DEFAULT 'DUE',
-  `generated_at` datetime NOT NULL DEFAULT current_timestamp()
+  `status` enum('DUE','PARTIAL','PAID','WAIVED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DUE',
+  `generated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -449,12 +449,12 @@ INSERT INTO `student_invoices` (`id`, `student_user_id`, `hostel_id`, `period_id
 --
 
 CREATE TABLE `student_profiles` (
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `student_id` varchar(50) NOT NULL,
-  `department` varchar(120) DEFAULT NULL,
-  `session_year` varchar(20) DEFAULT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `student_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `session_year` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `dob` date DEFAULT NULL,
-  `address` text DEFAULT NULL
+  `address` text COLLATE utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -463,7 +463,8 @@ CREATE TABLE `student_profiles` (
 
 INSERT INTO `student_profiles` (`user_id`, `student_id`, `department`, `session_year`, `dob`, `address`) VALUES
 (3, 'STU-2026-0001', 'CSE', '2025-2026', '2004-05-20', 'Dormitory Lane'),
-(4, 'STU-2026-0002', 'EEE', '2025-2026', '2004-11-02', 'Hall Street');
+(4, 'STU-2026-0002', 'EEE', '2025-2026', '2004-11-02', 'Hall Street'),
+(5, '23-51712-2', 'CSE', '23-29', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -472,14 +473,14 @@ INSERT INTO `student_profiles` (`user_id`, `student_id`, `department`, `session_
 --
 
 CREATE TABLE `users` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(191) NOT NULL,
-  `phone` varchar(30) DEFAULT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `status` enum('ACTIVE','INACTIVE','LOCKED') NOT NULL DEFAULT 'ACTIVE',
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('ACTIVE','INACTIVE','LOCKED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_login_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -491,7 +492,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password_hash`, `status`, 
 (1, 'Admin User', 'admin@localhost.test', '+8801000000001', '$2y$10$CwTycUXWue0Thq9StjUM0uJ8xV0bT9N8wFZ4q6Gv5Y2oD5dD5o9jC', 'ACTIVE', '2026-01-14 05:21:44', '2026-01-14 05:21:44', NULL),
 (2, 'Hostel Manager', 'manager@localhost.test', '+8801000000002', '$2y$10$CwTycUXWue0Thq9StjUM0uJ8xV0bT9N8wFZ4q6Gv5Y2oD5dD5o9jC', 'ACTIVE', '2026-01-14 05:21:44', '2026-01-14 05:21:44', NULL),
 (3, 'Student One', 'student1@localhost.test', '+8801000000003', '$2y$10$CwTycUXWue0Thq9StjUM0uJ8xV0bT9N8wFZ4q6Gv5Y2oD5dD5o9jC', 'ACTIVE', '2026-01-14 05:21:44', '2026-01-14 05:21:44', NULL),
-(4, 'Student Two', 'student2@localhost.test', '+8801000000004', '$2y$10$CwTycUXWue0Thq9StjUM0uJ8xV0bT9N8wFZ4q6Gv5Y2oD5dD5o9jC', 'ACTIVE', '2026-01-14 05:21:44', '2026-01-14 05:21:44', NULL);
+(4, 'Student Two', 'student2@localhost.test', '+8801000000004', '$2y$10$CwTycUXWue0Thq9StjUM0uJ8xV0bT9N8wFZ4q6Gv5Y2oD5dD5o9jC', 'ACTIVE', '2026-01-14 05:21:44', '2026-01-14 05:21:44', NULL),
+(5, 'DIN MUHAMMAD REZWOAN', 'frezwoan@gmail.com', '01643751861', '$2y$10$U5Gp3YxGKKt.KK7GKSnGJeiSXXNbCD4AM2qMCYuk8jaH5u/zr5/ee', 'ACTIVE', '2026-01-15 07:15:19', '2026-01-15 21:08:30', '2026-01-15 21:08:30');
 
 -- --------------------------------------------------------
 
@@ -500,9 +502,9 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password_hash`, `status`, 
 --
 
 CREATE TABLE `user_roles` (
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `role_id` smallint(5) UNSIGNED NOT NULL,
-  `assigned_at` datetime NOT NULL DEFAULT current_timestamp()
+  `user_id` bigint UNSIGNED NOT NULL,
+  `role_id` smallint UNSIGNED NOT NULL,
+  `assigned_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -513,7 +515,8 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `assigned_at`) VALUES
 (1, 1, '2026-01-14 05:21:44'),
 (2, 2, '2026-01-14 05:21:44'),
 (3, 3, '2026-01-14 05:21:44'),
-(4, 3, '2026-01-14 05:21:44');
+(4, 3, '2026-01-14 05:21:44'),
+(5, 3, '2026-01-15 07:15:19');
 
 --
 -- Indexes for dumped tables
@@ -700,109 +703,109 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `allocations`
 --
 ALTER TABLE `allocations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `complaints`
 --
 ALTER TABLE `complaints`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `complaint_categories`
 --
 ALTER TABLE `complaint_categories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `complaint_messages`
 --
 ALTER TABLE `complaint_messages`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `fee_periods`
 --
 ALTER TABLE `fee_periods`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `floors`
 --
 ALTER TABLE `floors`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `hostels`
 --
 ALTER TABLE `hostels`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `hostel_managers`
 --
 ALTER TABLE `hostel_managers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `notices`
 --
 ALTER TABLE `notices`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` smallint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `rooms`
 --
 ALTER TABLE `rooms`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `room_applications`
 --
 ALTER TABLE `room_applications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `room_types`
 --
 ALTER TABLE `room_types`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `seats`
 --
 ALTER TABLE `seats`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `student_invoices`
 --
 ALTER TABLE `student_invoices`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables

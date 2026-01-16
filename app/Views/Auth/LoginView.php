@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Hostel Management System</title>
+    <?php 
+    $pageTitle = 'Login';
+    $pageDescription = 'Sign in to access your Hostel Management System dashboard. Manage room allocations, payments, and more.';
+    include __DIR__ . '/../partials/meta.php'; 
+    ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Auth/css/LoginView.css">
 </head>
@@ -71,8 +76,8 @@
 
                     <div class="form-options">
                         <label class="form-check">
-                            <input type="checkbox" name="remember">
-                            <span>Remember me</span>
+                            <input type="checkbox" name="remember" id="remember">
+                            <span>Remember me for 30 days</span>
                         </label>
                         <a href="index.php?page=forgot_password">Forgot Password?</a>
                     </div>

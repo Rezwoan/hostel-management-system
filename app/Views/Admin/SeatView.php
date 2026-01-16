@@ -8,6 +8,7 @@ $page = 'admin_seats';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
+    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
     <script src="public/assets/js/table-filter.js" defer></script>

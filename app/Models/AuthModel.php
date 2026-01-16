@@ -87,4 +87,141 @@ function logoutUser() {
     session_unset();
     session_destroy();
 }
+
+/**
+ * Create a remember me token for a user
+ * @param int $userId
+ * @return string|false The token or false on failure
+ */
+function createRememberToken($userId) {
+    $conn = dbConnect();
+    
+    try {
+        // Generate a secure random token
+        $selector = bin2hex(random_bytes(16)); // Used to look up the token
+        $validator = bin2hex(random_bytes(32)); // Used to verify the token
+        $token = $selector . ':' . $validator;
+        $hashedValidator = hash('sha256', $validator);
+        $expiry = date('Y-m-d H:i:s', time() + (30 * 24 * 60 * 60)); // 30 days
+        
+        // Delete any existing tokens for this user (optional: allow multiple devices)
+        $deleteSql = "DELETE FROM remember_tokens WHERE user_id = ?";
+        $deleteStmt = mysqli_prepare($conn, $deleteSql);
+        mysqli_stmt_bind_param($deleteStmt, "i", $userId);
+        mysqli_stmt_execute($deleteStmt);
+        
+        // Insert new token
+        $sql = "INSERT INTO remember_tokens (user_id, selector, hashed_validator, expires_at) VALUES (?, ?, ?, ?)";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "isss", $userId, $selector, $hashedValidator, $expiry);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            return $token;
+        }
+        
+        return false;
+    } catch (Exception $e) {
+        error_log("Remember token creation failed: " . $e->getMessage());
+        return false;
+    } finally {
+        mysqli_close($conn);
+    }
+}
+
+/**
+ * Validate a remember me token and return user data if valid
+ * @param string $token
+ * @return array|false User data or false if invalid
+ */
+function validateRememberToken($token) {
+    $conn = dbConnect();
+    
+    try {
+        // Split token into selector and validator
+        $parts = explode(':', $token);
+        if (count($parts) !== 2) {
+            return false;
+        }
+        
+        list($selector, $validator) = $parts;
+        $hashedValidator = hash('sha256', $validator);
+        
+        // Look up token by selector
+        $sql = "SELECT rt.user_id, rt.hashed_validator, rt.expires_at, 
+                       u.id, u.name, u.email, u.status,
+                       (SELECT r.name FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = u.id LIMIT 1) as role
+                FROM remember_tokens rt
+                JOIN users u ON rt.user_id = u.id
+                WHERE rt.selector = ? AND rt.expires_at > NOW()";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $selector);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($row = mysqli_fetch_assoc($result)) {
+            // Verify the validator using timing-safe comparison
+            if (hash_equals($row['hashed_validator'], $hashedValidator)) {
+                // Check if user is still active
+                if ($row['status'] !== 'ACTIVE') {
+                    // User is no longer active, delete the token
+                    deleteRememberToken($selector);
+                    return false;
+                }
+                
+                return [
+                    'id' => $row['user_id'],
+                    'name' => $row['name'],
+                    'email' => $row['email'],
+                    'role' => $row['role']
+                ];
+            }
+        }
+        
+        return false;
+    } catch (Exception $e) {
+        error_log("Remember token validation failed: " . $e->getMessage());
+        return false;
+    } finally {
+        mysqli_close($conn);
+    }
+}
+
+/**
+ * Delete a remember me token
+ * @param string $selector
+ */
+function deleteRememberToken($selector) {
+    $conn = dbConnect();
+    
+    try {
+        $sql = "DELETE FROM remember_tokens WHERE selector = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $selector);
+        mysqli_stmt_execute($stmt);
+    } catch (Exception $e) {
+        error_log("Remember token deletion failed: " . $e->getMessage());
+    } finally {
+        mysqli_close($conn);
+    }
+}
+
+/**
+ * Delete all remember me tokens for a user (call on logout or password change)
+ * @param int $userId
+ */
+function deleteAllRememberTokens($userId) {
+    $conn = dbConnect();
+    
+    try {
+        $sql = "DELETE FROM remember_tokens WHERE user_id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "i", $userId);
+        mysqli_stmt_execute($stmt);
+    } catch (Exception $e) {
+        error_log("Remember tokens deletion failed: " . $e->getMessage());
+    } finally {
+        mysqli_close($conn);
+    }
+}
 ?>

@@ -6,7 +6,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><?php echo $pageTitle; ?></title>
+    <title><?php echo $pageTitle; ?> - Hostel Management System</title>
+    <?php 
+    $pageDescription = 'Manager dashboard for hostel management. Manage room allocations, student applications, and hostel operations.';
+    include __DIR__ . '/../partials/meta.php'; 
+    ?>
 </head>
 <body>
     <h1><?php echo $pageTitle; ?></h1>

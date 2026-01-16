@@ -1,8 +1,35 @@
 <?php
 
-// 1. Start Session
+// 1. Start Session with secure settings
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    // Configure session security before starting
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_httponly', 1);
+    
+    // Set session timeout to 2 hours
+    ini_set('session.gc_maxlifetime', 7200);
+    
+    // Set cookie lifetime (0 = until browser closes, unless "remember me" is used)
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => false, // Set to true if using HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    
     session_start();
+    
+    // Regenerate session ID periodically to prevent session fixation
+    if (!isset($_SESSION['_created'])) {
+        $_SESSION['_created'] = time();
+    } elseif (time() - $_SESSION['_created'] > 1800) {
+        // Regenerate session ID every 30 minutes
+        session_regenerate_id(true);
+        $_SESSION['_created'] = time();
+    }
 }
 
 // 2. Get Requested Page (Default to login)
@@ -74,6 +101,18 @@ switch ($page) {
         break;
 
     case 'logout':
+        // Clear remember me cookie and token
+        if (isset($_COOKIE['hms_remember_token'])) {
+            // Delete token from database
+            require_once __DIR__ . '/app/Models/AuthModel.php';
+            $token = $_COOKIE['hms_remember_token'];
+            $parts = explode(':', $token);
+            if (count($parts) === 2) {
+                deleteRememberToken($parts[0]); // Delete by selector
+            }
+            // Clear the cookie
+            setcookie('hms_remember_token', '', time() - 3600, '/', '', false, true);
+        }
         // Destroy session and redirect to login
         session_unset();
         session_destroy();

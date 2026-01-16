@@ -11,6 +11,7 @@ $page = 'admin_audit_logs';
     <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -112,37 +113,38 @@ $page = 'admin_audit_logs';
                         <h2>System Audit Logs</h2>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-side instant filtering -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_audit_logs">
-                            <select name="action" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="logSearch" class="form-control" placeholder="Search logs..." data-table-search="auditLogsTable">
+                            <select id="actionFilter" class="form-control" data-filter-table="auditLogsTable" data-filter-column="2">
                                 <option value="">All Actions</option>
-                                <option value="CREATE" <?php echo (isset($_GET['action']) && $_GET['action'] === 'CREATE') ? 'selected' : ''; ?>>Create</option>
-                                <option value="UPDATE" <?php echo (isset($_GET['action']) && $_GET['action'] === 'UPDATE') ? 'selected' : ''; ?>>Update</option>
-                                <option value="DELETE" <?php echo (isset($_GET['action']) && $_GET['action'] === 'DELETE') ? 'selected' : ''; ?>>Delete</option>
-                                <option value="LOGIN" <?php echo (isset($_GET['action']) && $_GET['action'] === 'LOGIN') ? 'selected' : ''; ?>>Login</option>
-                                <option value="LOGOUT" <?php echo (isset($_GET['action']) && $_GET['action'] === 'LOGOUT') ? 'selected' : ''; ?>>Logout</option>
+                                <option value="CREATE">Create</option>
+                                <option value="UPDATE">Update</option>
+                                <option value="DELETE">Delete</option>
+                                <option value="LOGIN">Login</option>
+                                <option value="LOGOUT">Logout</option>
+                                <option value="RECORD_PAYMENT">Record Payment</option>
+                                <option value="APPROVE">Approve</option>
+                                <option value="REJECT">Reject</option>
                             </select>
-                            <select name="entity_type" class="form-control">
+                            <select id="entityFilter" class="form-control" data-filter-table="auditLogsTable" data-filter-column="3">
                                 <option value="">All Entities</option>
-                                <option value="user" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'user') ? 'selected' : ''; ?>>User</option>
-                                <option value="hostel" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'hostel') ? 'selected' : ''; ?>>Hostel</option>
-                                <option value="room" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'room') ? 'selected' : ''; ?>>Room</option>
-                                <option value="allocation" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'allocation') ? 'selected' : ''; ?>>Allocation</option>
-                                <option value="invoice" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'invoice') ? 'selected' : ''; ?>>Invoice</option>
-                                <option value="payment" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'payment') ? 'selected' : ''; ?>>Payment</option>
-                                <option value="complaint" <?php echo (isset($_GET['entity_type']) && $_GET['entity_type'] === 'complaint') ? 'selected' : ''; ?>>Complaint</option>
+                                <option value="users">Users</option>
+                                <option value="hostels">Hostels</option>
+                                <option value="rooms">Rooms</option>
+                                <option value="allocations">Allocations</option>
+                                <option value="student_invoices">Invoices</option>
+                                <option value="payments">Payments</option>
+                                <option value="complaints">Complaints</option>
+                                <option value="room_applications">Applications</option>
                             </select>
-                            <input type="date" name="from_date" class="form-control" value="<?php echo htmlspecialchars($_GET['from_date'] ?? ''); ?>" placeholder="From">
-                            <input type="date" name="to_date" class="form-control" value="<?php echo htmlspecialchars($_GET['to_date'] ?? ''); ?>" placeholder="To">
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="auditLogsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -164,9 +166,9 @@ $page = 'admin_audit_logs';
                                                     <?php 
                                                     $actionType = $log['action'] ?? '';
                                                     $actionClass = 'badge-info';
-                                                    if ($actionType === 'CREATE') $actionClass = 'badge-success';
+                                                    if (in_array($actionType, ['CREATE', 'APPROVE', 'RECORD_PAYMENT'])) $actionClass = 'badge-success';
                                                     elseif ($actionType === 'DELETE') $actionClass = 'badge-danger';
-                                                    elseif ($actionType === 'UPDATE') $actionClass = 'badge-warning';
+                                                    elseif (in_array($actionType, ['UPDATE', 'REJECT'])) $actionClass = 'badge-warning';
                                                     ?>
                                                     <span class="badge <?php echo $actionClass; ?>">
                                                         <?php echo htmlspecialchars($actionType); ?>
@@ -178,7 +180,30 @@ $page = 'admin_audit_logs';
                                                         #<?php echo (int)$log['entity_id']; ?>
                                                     <?php endif; ?>
                                                 </td>
-                                                <td><?php echo htmlspecialchars(substr($log['meta_json'] ?? '', 0, 40)); ?><?php echo strlen($log['meta_json'] ?? '') > 40 ? '...' : ''; ?></td>
+                                                <td>
+                                                    <?php 
+                                                    $details = $log['meta_json'] ?? '';
+                                                    if (!empty($details)) {
+                                                        // Try to format JSON nicely
+                                                        $decoded = json_decode($details, true);
+                                                        if ($decoded) {
+                                                            // Show key details in a readable format
+                                                            $displayParts = [];
+                                                            foreach ($decoded as $key => $value) {
+                                                                if (is_array($value)) continue;
+                                                                $displayParts[] = str_replace('_', ' ', $key) . ': ' . $value;
+                                                            }
+                                                            $details = implode(', ', array_slice($displayParts, 0, 2));
+                                                            if (count($displayParts) > 2) $details .= '...';
+                                                        } else {
+                                                            $details = substr($details, 0, 40) . (strlen($details) > 40 ? '...' : '');
+                                                        }
+                                                        echo htmlspecialchars($details);
+                                                    } else {
+                                                        echo '<span class="text-muted">-</span>';
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td><?php echo htmlspecialchars($log['created_at'] ?? ''); ?></td>
                                                 <td>
                                                     <a href="index.php?page=admin_audit_logs&action=view&id=<?php echo (int)$log['id']; ?>" class="btn btn-sm btn-secondary">View</a>

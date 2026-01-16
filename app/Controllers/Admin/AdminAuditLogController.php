@@ -52,7 +52,28 @@ if ($action === 'view') {
     $data['logs'] = getAuditLogsByEntity($entityType, $entityId);
     $pageTitle = 'Entity Audit History';
 } else {
-    $data['logs'] = getAllAuditLogs();
+    // Build filters from GET parameters
+    $filters = [];
+    
+    // Filter by action type (but not if it's 'logs' which is the default action)
+    if (!empty($_GET['filter_action'])) {
+        $filters['action'] = $_GET['filter_action'];
+    }
+    
+    if (!empty($_GET['entity_type'])) {
+        $filters['entity_type'] = $_GET['entity_type'];
+    }
+    
+    if (!empty($_GET['from_date'])) {
+        $filters['from_date'] = $_GET['from_date'];
+    }
+    
+    if (!empty($_GET['to_date'])) {
+        $filters['to_date'] = $_GET['to_date'];
+    }
+    
+    $data['logs'] = getAllAuditLogs($filters);
+    $data['filters'] = $filters;
 }
 
 require_once __DIR__ . '/../../Views/Admin/AuditLogView.php';

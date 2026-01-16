@@ -1683,13 +1683,59 @@ function deleteNotice($id, $actorUserId) {
 // AUDIT LOGS (View Only)
 // ============================================================
 
-function getAllAuditLogs() {
+function getAllAuditLogs($filters = []) {
     $conn = dbConnect();
+    
+    $where = [];
+    $params = [];
+    $types = '';
+    
+    // Filter by action type
+    if (!empty($filters['action'])) {
+        $where[] = "al.action = ?";
+        $params[] = $filters['action'];
+        $types .= 's';
+    }
+    
+    // Filter by entity type
+    if (!empty($filters['entity_type'])) {
+        $where[] = "al.entity_type = ?";
+        $params[] = $filters['entity_type'];
+        $types .= 's';
+    }
+    
+    // Filter by date range
+    if (!empty($filters['from_date'])) {
+        $where[] = "DATE(al.created_at) >= ?";
+        $params[] = $filters['from_date'];
+        $types .= 's';
+    }
+    
+    if (!empty($filters['to_date'])) {
+        $where[] = "DATE(al.created_at) <= ?";
+        $params[] = $filters['to_date'];
+        $types .= 's';
+    }
+    
     $sql = "SELECT al.*, u.name as actor_name 
             FROM audit_logs al 
-            LEFT JOIN users u ON al.actor_user_id = u.id 
-            ORDER BY al.id DESC";
-    $result = mysqli_query($conn, $sql);
+            LEFT JOIN users u ON al.actor_user_id = u.id";
+    
+    if (!empty($where)) {
+        $sql .= " WHERE " . implode(' AND ', $where);
+    }
+    
+    $sql .= " ORDER BY al.id DESC";
+    
+    if (!empty($params)) {
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+    } else {
+        $result = mysqli_query($conn, $sql);
+    }
+    
     $logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
     return $logs;

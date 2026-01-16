@@ -1,12 +1,6 @@
 <?php
-declare(strict_types=1);
+// app/Controllers/Admin/AdminController.php
+// This file now redirects to DashboardController for backwards compatibility
 
-class AdminController
-{
-    public function handle(): void
-    {
-        $pageTitle = 'Admin Dashboard';
-        $message = 'Hello Admin, this is a demo controller.';
-        include __DIR__ . '/../../Views/Admin/dashboard.php';
-    }
-}
+require_once __DIR__ . '/DashboardController.php';
+

@@ -1,0 +1,24 @@
+<?php
+// Simple demo view for the manager role
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><?php echo $pageTitle; ?> - Hostel Management System</title>
+    <?php 
+    $pageDescription = 'Manager dashboard for hostel management. Manage room allocations, student applications, and hostel operations.';
+    include __DIR__ . '/../partials/meta.php'; 
+    ?>
+</head>
+<body>
+    <h1><?php echo $pageTitle; ?></h1>
+    <p><?php echo $message; ?></p>
+    <nav>
+        <a href="/index.php?role=admin">Admin</a> |
+        <a href="/index.php?role=manager">Manager</a> |
+        <a href="/index.php?role=student">Student</a>
+    </nav>
+</body>
+</html>

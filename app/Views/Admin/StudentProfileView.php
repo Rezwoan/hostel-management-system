@@ -10,6 +10,7 @@ $page = 'admin_students';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -152,19 +153,16 @@ $page = 'admin_students';
                         <h2>All Students</h2>
                     </div>
                     
-                    <!-- Search Bar -->
+                    <!-- Search Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_students">
-                            <input type="text" name="search" class="form-control" placeholder="Search by name, email, or student ID..."
-                                   value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-                            <button type="submit" class="btn btn-secondary">Search</button>
-                        </form>
+                        <div class="filter-form">
+                            <input type="text" id="studentSearch" class="form-control" placeholder="Search by name, email, or student ID..." data-table-search="studentsTable">
+                        </div>
                     </div>
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="studentsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>

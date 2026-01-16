@@ -10,6 +10,7 @@ $page = 'admin_applications';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -152,30 +153,29 @@ $page = 'admin_applications';
                         <h2>All Applications</h2>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_applications">
-                            <select name="status" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="appSearch" class="form-control" placeholder="Search by name, email..." data-table-search="applicationsTable">
+                            <select id="statusFilter" class="form-control" data-filter-table="applicationsTable" data-filter-column="5">
                                 <option value="">All Status</option>
-                                <option value="DRAFT" <?php echo (isset($_GET['status']) && $_GET['status'] === 'DRAFT') ? 'selected' : ''; ?>>Draft</option>
-                                <option value="SUBMITTED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'SUBMITTED') ? 'selected' : ''; ?>>Submitted</option>
-                                <option value="APPROVED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'APPROVED') ? 'selected' : ''; ?>>Approved</option>
-                                <option value="REJECTED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'REJECTED') ? 'selected' : ''; ?>>Rejected</option>
-                                <option value="CANCELLED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'CANCELLED') ? 'selected' : ''; ?>>Cancelled</option>
+                                <option value="DRAFT">Draft</option>
+                                <option value="SUBMITTED">Submitted</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                                <option value="CANCELLED">Cancelled</option>
                             </select>
-                            <select name="hostel_id" class="form-control">
+                            <select id="hostelFilter" class="form-control" data-filter-table="applicationsTable" data-filter-column="2">
                                 <option value="">All Hostels</option>
                                 <?php if (!empty($data['hostels'])): ?>
                                     <?php foreach ($data['hostels'] as $hostel): ?>
-                                        <option value="<?php echo (int)$hostel['id']; ?>" <?php echo (isset($_GET['hostel_id']) && $_GET['hostel_id'] == $hostel['id']) ? 'selected' : ''; ?>>
+                                        <option value="<?php echo htmlspecialchars($hostel['name']); ?>">
                                             <?php echo htmlspecialchars($hostel['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <!-- Stats Summary -->
@@ -196,11 +196,6 @@ $page = 'admin_applications';
                             <div class="stat-value"><?php echo (int)($data['stats']['total'] ?? 0); ?></div>
                             <div class="stat-label">Total</div>
                         </div>
-                    </div>
-                    
-                    <!-- Live Search -->
-                    <div class="search-box" style="margin-bottom: 15px;">
-                        <input type="text" id="tableSearch" class="form-control" placeholder="Search applications...">
                     </div>
                     
                     <!-- Status Legend -->
@@ -238,7 +233,7 @@ $page = 'admin_applications';
                                             elseif ($status === 'CANCELLED') $statusClass = 'badge-secondary';
                                             $canReview = in_array($status, ['DRAFT', 'SUBMITTED']);
                                             ?>
-                                            <tr data-id="<?php echo (int)$app['id']; ?>">
+                                            <tr data-id="<?php echo (int)$app['id']; ?>" data-student-id="<?php echo (int)$app['student_user_id']; ?>" data-hostel-id="<?php echo (int)$app['hostel_id']; ?>">
                                                 <td><?php echo (int)$app['id']; ?></td>
                                                 <td>
                                                     <?php echo htmlspecialchars($app['student_name'] ?? ''); ?><br>
@@ -254,12 +249,12 @@ $page = 'admin_applications';
                                                     <div class="action-btns">
                                                         <a href="index.php?page=admin_applications&action=view&id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-secondary">View</a>
                                                         <?php if ($canReview): ?>
-                                                            <button type="button" class="btn btn-sm btn-success" onclick="quickApprove(<?php echo (int)$app['id']; ?>, this)" title="Quick Approve">✓</button>
-                                                            <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal(<?php echo (int)$app['id']; ?>)" title="Reject">✗</button>
+                                                            <button type="button" class="btn btn-sm btn-success" onclick="quickApprove(<?php echo (int)$app['id']; ?>, this)">Approve</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal(<?php echo (int)$app['id']; ?>)">Reject</button>
                                                         <?php elseif ($status === 'APPROVED'): ?>
-                                                            <a href="index.php?page=admin_allocations&action=add" class="btn btn-sm btn-primary" title="Create Allocation">Allocate</a>
+                                                            <a href="index.php?page=admin_allocations&action=add&student_id=<?php echo (int)$app['student_user_id']; ?>&hostel_id=<?php echo (int)$app['hostel_id']; ?>&app_id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-primary">Allocate</a>
                                                         <?php endif; ?>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteApplication(<?php echo (int)$app['id']; ?>, this)" title="Delete">🗑</button>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteApplication(<?php echo (int)$app['id']; ?>, this)">Delete</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -285,7 +280,7 @@ $page = 'admin_applications';
             <p id="confirmMessage">Are you sure?</p>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmBtn">Delete</button>
+                <button type="button" class="btn btn-success" id="confirmBtn">Confirm</button>
             </div>
         </div>
     </div>
@@ -316,9 +311,12 @@ $page = 'admin_applications';
     <script>
         let pendingAction = null;
         
-        function showConfirm(title, message, callback) {
+        function showConfirm(title, message, callback, btnText, btnClass) {
             document.getElementById("confirmTitle").textContent = title;
             document.getElementById("confirmMessage").textContent = message;
+            let confirmBtn = document.getElementById("confirmBtn");
+            confirmBtn.textContent = btnText || "Confirm";
+            confirmBtn.className = "btn " + (btnClass || "btn-success");
             document.getElementById("confirmModal").classList.add("open");
             pendingAction = callback;
         }
@@ -364,7 +362,7 @@ $page = 'admin_applications';
                 };
                 
                 xhr.send("id=" + id);
-            });
+            }, "Delete", "btn-danger");
         }
         
         // Quick Approve via AJAX
@@ -388,10 +386,13 @@ $page = 'admin_applications';
                                 
                                 // Replace action buttons
                                 let actionsCell = row.querySelector(".action-btns");
+                                // Get student and hostel from row data
+                                let studentId = row.dataset.studentId || '';
+                                let hostelId = row.dataset.hostelId || '';
                                 actionsCell.innerHTML = 
                                     '<a href="index.php?page=admin_applications&action=view&id=' + id + '" class="btn btn-sm btn-secondary">View</a> ' +
-                                    '<a href="index.php?page=admin_allocations&action=add" class="btn btn-sm btn-primary">Allocate</a> ' +
-                                    '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteApplication(' + id + ', this)">🗑</button>';
+                                    '<a href="index.php?page=admin_allocations&action=add&student_id=' + studentId + '&hostel_id=' + hostelId + '&app_id=' + id + '" class="btn btn-sm btn-primary">Allocate</a> ' +
+                                    '<button type="button" class="btn btn-sm btn-danger" onclick="deleteApplication(' + id + ', this)">Delete</button>';
                             } else {
                                 alert("Error: " + response.error);
                             }

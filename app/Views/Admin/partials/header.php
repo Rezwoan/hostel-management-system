@@ -4,7 +4,7 @@
 $currentPage = $page ?? '';
 $activeSection = 'dashboard';
 
-$userPages = ['admin_users', 'admin_students'];
+$userPages = ['admin_users', 'admin_students', 'admin_managers', 'admin_admins'];
 $hostelPages = ['admin_hostels', 'admin_hostel_managers', 'admin_floors', 'admin_room_types', 'admin_rooms', 'admin_seats'];
 $allocationPages = ['admin_applications', 'admin_allocations'];
 $financePages = ['admin_fee_periods', 'admin_invoices', 'admin_payments'];
@@ -50,12 +50,84 @@ elseif ($currentPage === 'admin_dashboard') $activeSection = 'dashboard';
     </div>
     <nav class="mobile-nav">
         <a href="index.php?page=admin_dashboard" class="<?php echo $activeSection === 'dashboard' ? 'active' : ''; ?>">Dashboard</a>
-        <a href="index.php?page=admin_users" class="<?php echo $activeSection === 'users' ? 'active' : ''; ?>">Users</a>
-        <a href="index.php?page=admin_hostels" class="<?php echo $activeSection === 'hostel' ? 'active' : ''; ?>">Hostel</a>
-        <a href="index.php?page=admin_applications" class="<?php echo $activeSection === 'allocation' ? 'active' : ''; ?>">Allocation</a>
-        <a href="index.php?page=admin_invoices" class="<?php echo $activeSection === 'finance' ? 'active' : ''; ?>">Finance</a>
-        <a href="index.php?page=admin_complaints" class="<?php echo $activeSection === 'support' ? 'active' : ''; ?>">Support</a>
-        <a href="index.php?page=admin_audit_logs" class="<?php echo $activeSection === 'system' ? 'active' : ''; ?>">System</a>
+        
+        <!-- Users Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'users' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                Users <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'users' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_users">All Users</a>
+                <a href="index.php?page=admin_students">Students</a>
+                <a href="index.php?page=admin_managers">Managers</a>
+                <a href="index.php?page=admin_admins">Admins</a>
+                <a href="index.php?page=admin_users&action=add">+ Add User</a>
+            </div>
+        </div>
+        
+        <!-- Hostel Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'hostel' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                Hostel <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'hostel' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_hostels">Hostels</a>
+                <a href="index.php?page=admin_hostel_managers">Managers</a>
+                <a href="index.php?page=admin_floors">Floors</a>
+                <a href="index.php?page=admin_room_types">Room Types</a>
+                <a href="index.php?page=admin_rooms">Rooms</a>
+                <a href="index.php?page=admin_seats">Seats</a>
+            </div>
+        </div>
+        
+        <!-- Allocation Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'allocation' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                Allocation <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'allocation' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_applications">Applications</a>
+                <a href="index.php?page=admin_allocations">Allocations</a>
+                <a href="index.php?page=admin_allocations&action=add">+ New Allocation</a>
+            </div>
+        </div>
+        
+        <!-- Finance Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'finance' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                Finance <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'finance' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_fee_periods">Fee Periods</a>
+                <a href="index.php?page=admin_invoices">Invoices</a>
+                <a href="index.php?page=admin_payments">Payments</a>
+                <a href="index.php?page=admin_payments&action=add">+ Record Payment</a>
+            </div>
+        </div>
+        
+        <!-- Support Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'support' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                Support <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'support' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_complaints">Complaints</a>
+                <a href="index.php?page=admin_complaint_categories">Categories</a>
+                <a href="index.php?page=admin_notices">Notices</a>
+                <a href="index.php?page=admin_notices&action=add">+ New Notice</a>
+            </div>
+        </div>
+        
+        <!-- System Section -->
+        <div class="mobile-nav-group">
+            <button class="mobile-nav-toggle <?php echo $activeSection === 'system' ? 'active' : ''; ?>" onclick="toggleMobileSubmenu(this)">
+                System <span class="toggle-icon">▼</span>
+            </button>
+            <div class="mobile-submenu <?php echo $activeSection === 'system' ? 'open' : ''; ?>">
+                <a href="index.php?page=admin_audit_logs">Audit Logs</a>
+            </div>
+        </div>
+        
         <a href="index.php?page=logout" class="logout">Logout</a>
     </nav>
 </div>
@@ -65,5 +137,18 @@ elseif ($currentPage === 'admin_dashboard') $activeSection = 'dashboard';
 function toggleMobileMenu() {
     document.getElementById('mobileMenu').classList.toggle('open');
     document.getElementById('mobileMenuOverlay').classList.toggle('open');
+}
+
+function toggleMobileSubmenu(btn) {
+    const submenu = btn.nextElementSibling;
+    const isOpen = submenu.classList.contains('open');
+    
+    // Close all other submenus (optional - for accordion behavior)
+    // document.querySelectorAll('.mobile-submenu.open').forEach(s => s.classList.remove('open'));
+    // document.querySelectorAll('.mobile-nav-toggle').forEach(b => b.classList.remove('expanded'));
+    
+    // Toggle current submenu
+    submenu.classList.toggle('open');
+    btn.classList.toggle('expanded');
 }
 </script>

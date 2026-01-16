@@ -10,6 +10,7 @@ $page = 'admin_payments';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -310,22 +311,19 @@ $page = 'admin_payments';
                         <a href="index.php?page=admin_payments&action=add" class="btn btn-primary">Record New Payment</a>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_payments">
-                            <select name="payment_method" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="paymentSearch" class="form-control" placeholder="Search payments..." data-table-search="paymentsTable">
+                            <select id="methodFilter" class="form-control" data-filter-table="paymentsTable" data-filter-column="4">
                                 <option value="">All Methods</option>
-                                <option value="CASH" <?php echo (isset($_GET['payment_method']) && $_GET['payment_method'] === 'CASH') ? 'selected' : ''; ?>>Cash</option>
-                                <option value="BANK_TRANSFER" <?php echo (isset($_GET['payment_method']) && $_GET['payment_method'] === 'BANK_TRANSFER') ? 'selected' : ''; ?>>Bank Transfer</option>
-                                <option value="CARD" <?php echo (isset($_GET['payment_method']) && $_GET['payment_method'] === 'CARD') ? 'selected' : ''; ?>>Card</option>
-                                <option value="CHEQUE" <?php echo (isset($_GET['payment_method']) && $_GET['payment_method'] === 'CHEQUE') ? 'selected' : ''; ?>>Cheque</option>
-                                <option value="ONLINE" <?php echo (isset($_GET['payment_method']) && $_GET['payment_method'] === 'ONLINE') ? 'selected' : ''; ?>>Online</option>
+                                <option value="CASH">Cash</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                <option value="CARD">Card</option>
+                                <option value="CHEQUE">Cheque</option>
+                                <option value="ONLINE">Online</option>
                             </select>
-                            <input type="date" name="from_date" class="form-control" value="<?php echo htmlspecialchars($_GET['from_date'] ?? ''); ?>" placeholder="From Date">
-                            <input type="date" name="to_date" class="form-control" value="<?php echo htmlspecialchars($_GET['to_date'] ?? ''); ?>" placeholder="To Date">
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <!-- Summary Stats -->
@@ -346,11 +344,6 @@ $page = 'admin_payments';
                             <div class="stat-value">$<?php echo number_format((float)($data['stats']['this_month'] ?? 0), 2); ?></div>
                             <div class="stat-label">This Month</div>
                         </div>
-                    </div>
-                    
-                    <!-- Live Search -->
-                    <div class="search-box" style="margin-bottom: 15px;">
-                        <input type="text" id="tableSearch" class="form-control" placeholder="Search payments...">
                     </div>
                     
                     <div class="table-card">

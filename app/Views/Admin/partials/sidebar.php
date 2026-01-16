@@ -4,7 +4,7 @@
 $currentPage = $page ?? '';
 
 // Determine which section we're in
-$userPages = ['admin_users', 'admin_students'];
+$userPages = ['admin_users', 'admin_students', 'admin_managers', 'admin_admins'];
 $hostelPages = ['admin_hostels', 'admin_hostel_managers', 'admin_floors', 'admin_room_types', 'admin_rooms', 'admin_seats'];
 $allocationPages = ['admin_applications', 'admin_allocations'];
 $financePages = ['admin_fee_periods', 'admin_invoices', 'admin_payments'];
@@ -21,6 +21,8 @@ if (in_array($currentPage, $userPages)) {
     $sidebarLinks = [
         ['page' => 'admin_users', 'label' => 'All Users', 'icon' => '👥'],
         ['page' => 'admin_students', 'label' => 'Students', 'icon' => '🎓'],
+        ['page' => 'admin_managers', 'label' => 'Managers', 'icon' => '👔'],
+        ['page' => 'admin_admins', 'label' => 'Admins', 'icon' => '🔑'],
         ['page' => 'admin_users&action=add', 'label' => '+ Add User', 'icon' => ''],
     ];
 } elseif (in_array($currentPage, $hostelPages)) {

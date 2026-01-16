@@ -81,7 +81,7 @@ if ($action === 'view') {
     $pageTitle = 'Edit Invoice';
 } elseif ($action === 'add') {
     $pageTitle = 'Create Invoice';
-    $data['students'] = getAllStudents();
+    $data['students'] = getStudentsWithActiveAllocations(); // Only students with active room allocations
     $data['hostels'] = getAllHostels();
     $data['periods'] = getAllFeePeriods();
 } else {

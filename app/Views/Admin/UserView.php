@@ -10,6 +10,7 @@ $page = 'admin_users';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -260,9 +261,22 @@ $page = 'admin_users';
                         <a href="index.php?page=admin_users&action=add" class="btn btn-primary">Add New User</a>
                     </div>
                     
-                    <!-- Live Search -->
-                    <div class="search-box">
-                        <input type="text" id="tableSearch" class="form-control" placeholder="Search users...">
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
+                    <div class="filter-bar">
+                        <div class="filter-form">
+                            <input type="text" id="userSearch" class="form-control" placeholder="Search users..." data-table-search="usersTable">
+                            <select id="roleFilter" class="form-control" data-filter-table="usersTable" data-filter-column="3">
+                                <option value="">All Roles</option>
+                                <option value="ADMIN">Admin</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="STUDENT">Student</option>
+                            </select>
+                            <select id="statusFilter" class="form-control" data-filter-table="usersTable" data-filter-column="4">
+                                <option value="">All Status</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="table-card">
@@ -466,17 +480,6 @@ $page = 'admin_users';
                 }, 500);
             });
         }
-        
-        // Table search
-        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#usersTable tbody tr");
-            
-            rows.forEach(function(row) {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
-        });
     </script>
 </body>
 </html>

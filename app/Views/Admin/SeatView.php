@@ -10,6 +10,7 @@ $page = 'admin_seats';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -187,33 +188,32 @@ $page = 'admin_seats';
                         <a href="index.php?page=admin_seats&action=add" class="btn btn-primary">Add New Seat</a>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_seats">
-                            <select name="hostel_id" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="seatSearch" class="form-control" placeholder="Search seats..." data-table-search="seatsTable">
+                            <select id="hostelFilter" class="form-control" data-filter-table="seatsTable" data-filter-column="3">
                                 <option value="">All Hostels</option>
                                 <?php if (!empty($data['hostels'])): ?>
                                     <?php foreach ($data['hostels'] as $hostel): ?>
-                                        <option value="<?php echo (int)$hostel['id']; ?>" <?php echo (isset($_GET['hostel_id']) && $_GET['hostel_id'] == $hostel['id']) ? 'selected' : ''; ?>>
+                                        <option value="<?php echo htmlspecialchars($hostel['name']); ?>">
                                             <?php echo htmlspecialchars($hostel['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <select name="status" class="form-control">
+                            <select id="statusFilter" class="form-control" data-filter-table="seatsTable" data-filter-column="4">
                                 <option value="">All Status</option>
-                                <option value="VACANT" <?php echo (isset($_GET['status']) && $_GET['status'] === 'VACANT') ? 'selected' : ''; ?>>Vacant</option>
-                                <option value="OCCUPIED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'OCCUPIED') ? 'selected' : ''; ?>>Occupied</option>
-                                <option value="RESERVED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'RESERVED') ? 'selected' : ''; ?>>Reserved</option>
+                                <option value="VACANT">Vacant</option>
+                                <option value="OCCUPIED">Occupied</option>
+                                <option value="RESERVED">Reserved</option>
                             </select>
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="seatsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>

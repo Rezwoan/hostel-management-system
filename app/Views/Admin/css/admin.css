@@ -138,6 +138,8 @@
 .mobile-nav {
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
 }
 
 .mobile-nav a {
@@ -158,6 +160,63 @@
     color: #ff6b6b;
     margin-top: auto;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile Submenu Styles */
+.mobile-nav-group {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mobile-nav-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 12px 20px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+}
+
+.mobile-nav-toggle:hover,
+.mobile-nav-toggle.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: #3498db;
+}
+
+.mobile-nav-toggle .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.mobile-nav-toggle.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.mobile-submenu {
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    transition: max-height 0.3s ease;
+}
+
+.mobile-submenu.open {
+    max-height: 500px;
+}
+
+.mobile-submenu a {
+    padding: 10px 20px 10px 35px;
+    font-size: 13px;
+    border-left: none !important;
+}
+
+.mobile-submenu a:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .mobile-menu-overlay {

@@ -10,6 +10,7 @@ $page = 'admin_allocations';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -28,6 +29,12 @@ $page = 'admin_allocations';
                 <?php endif; ?>
                 
                 <?php if ($action === 'add'): ?>
+                    <?php 
+                    // Get URL parameters for auto-fill
+                    $preSelectedStudentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
+                    $preSelectedHostelId = isset($_GET['hostel_id']) ? (int)$_GET['hostel_id'] : 0;
+                    $preSelectedAppId = isset($_GET['app_id']) ? (int)$_GET['app_id'] : 0;
+                    ?>
                     <!-- Create Allocation Form -->
                     <div class="breadcrumb">
                         <a href="index.php?page=admin_allocations">Allocations</a>
@@ -39,20 +46,20 @@ $page = 'admin_allocations';
                         <h3>Allocate Seat to Student</h3>
                         <p class="form-hint" style="margin-bottom: 15px; color: #666;">
                             <strong>Note:</strong> Only students with <span class="badge badge-success">APPROVED</span> applications 
-                            who don't have active allocations will appear in search.
+                            who don't have active allocations are shown.
                         </p>
                         
                         <form action="index.php?page=admin_allocations" method="POST" id="allocationForm">
                             <input type="hidden" name="form_action" value="create_allocation">
-                            <input type="hidden" id="application_id" name="application_id" value="">
+                            <input type="hidden" id="application_id" name="application_id" value="<?php echo $preSelectedAppId; ?>">
                             
-                            <!-- Student Selection with Live Search -->
-                            <div class="form-group" style="position: relative;">
-                                <label for="student_search">Student <span class="required">*</span></label>
-                                <input type="text" id="student_search" class="form-control" placeholder="Type student name, email, or ID to search..." autocomplete="off">
-                                <input type="hidden" id="student_id" name="student_id" required>
-                                <div id="studentSearchResults" class="search-results" style="display: none;"></div>
-                                <span class="form-hint">Search by name, email, or student ID</span>
+                            <!-- Student Selection Dropdown -->
+                            <div class="form-group">
+                                <label for="student_id">Student <span class="required">*</span></label>
+                                <select id="student_id" name="student_id" class="form-control" required>
+                                    <option value="">-- Select a Student --</option>
+                                </select>
+                                <span class="form-hint">Shows students with approved applications who don't have active allocations</span>
                             </div>
                             
                             <!-- Application Info (shown after student is selected) -->
@@ -124,30 +131,6 @@ $page = 'admin_allocations';
                     </div>
                     
                     <style>
-                        .search-results {
-                            position: absolute;
-                            background: white;
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                            max-height: 200px;
-                            overflow-y: auto;
-                            width: 100%;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                            z-index: 1000;
-                        }
-                        .search-result-item {
-                            padding: 10px;
-                            border-bottom: 1px solid #eee;
-                            cursor: pointer;
-                        }
-                        .search-result-item:hover {
-                            background: #f5f5f5;
-                        }
-                        .search-result-item .app-info {
-                            color: #666;
-                            font-size: 11px;
-                            margin-top: 3px;
-                        }
                         .alert-info {
                             background: #e7f3ff;
                             border: 1px solid #b3d7ff;
@@ -158,82 +141,98 @@ $page = 'admin_allocations';
                     
                     <script>
                         // =============================================
-                        // STUDENT SEARCH AJAX
+                        // STUDENT DROPDOWN WITH AUTO-FILL
                         // =============================================
-                        let searchTimer;
-                        let selectedStudentData = null;
+                        let studentsData = []; // Store all approved students
                         
-                        function searchStudents() {
-                            let keyword = document.getElementById("student_search").value.trim();
-                            let results = document.getElementById("studentSearchResults");
+                        // Pre-selected values from URL (set by PHP)
+                        const preSelectedStudentId = <?php echo $preSelectedStudentId; ?>;
+                        const preSelectedHostelId = <?php echo $preSelectedHostelId; ?>;
+                        const preSelectedAppId = <?php echo $preSelectedAppId; ?>;
+                        
+                        // Load all approved students on page load
+                        function loadApprovedStudents() {
+                            let studentSelect = document.getElementById("student_id");
+                            studentSelect.innerHTML = '<option value="">Loading students...</option>';
                             
-                            if (keyword.length < 2) {
-                                results.style.display = "none";
+                            let xhr = new XMLHttpRequest();
+                            xhr.open("GET", "app/Controllers/Api/get_approved_students.php", true);
+                            
+                            xhr.onreadystatechange = function() {
+                                if (this.readyState == 4 && this.status == 200) {
+                                    let response = JSON.parse(this.responseText);
+                                    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+                                    
+                                    if (response.success && response.data.length > 0) {
+                                        studentsData = response.data;
+                                        response.data.forEach(function(student) {
+                                            let option = document.createElement("option");
+                                            option.value = student.id;
+                                            option.textContent = student.name + " (" + student.email + ")";
+                                            // Store additional data as data attributes
+                                            option.dataset.applicationId = student.application_id;
+                                            option.dataset.hostelId = student.hostel_id;
+                                            option.dataset.hostelName = student.hostel_name;
+                                            option.dataset.roomTypeName = student.room_type_name;
+                                            studentSelect.appendChild(option);
+                                        });
+                                        
+                                        // If pre-selected from URL, auto-select
+                                        if (preSelectedStudentId > 0) {
+                                            studentSelect.value = preSelectedStudentId;
+                                            onStudentChange();
+                                        }
+                                    } else {
+                                        studentSelect.innerHTML = '<option value="">No eligible students (need APPROVED application)</option>';
+                                    }
+                                }
+                            };
+                            
+                            xhr.send();
+                        }
+                        
+                        // When student is selected from dropdown
+                        function onStudentChange() {
+                            let studentSelect = document.getElementById("student_id");
+                            let selectedOption = studentSelect.options[studentSelect.selectedIndex];
+                            
+                            if (!studentSelect.value) {
+                                // Reset form
+                                document.getElementById("application_id").value = "";
+                                document.getElementById("applicationInfo").style.display = "none";
+                                document.getElementById("hostel_id").value = "";
+                                resetDependentDropdowns();
+                                document.getElementById("submitBtn").disabled = true;
                                 return;
                             }
                             
-                            clearTimeout(searchTimer);
-                            searchTimer = setTimeout(function() {
-                                let xhr = new XMLHttpRequest();
-                                xhr.open("GET", "app/Controllers/Api/search_students.php?q=" + encodeURIComponent(keyword), true);
-                                
-                                xhr.onreadystatechange = function() {
-                                    if (this.readyState == 4 && this.status == 200) {
-                                        let response = JSON.parse(this.responseText);
-                                        if (response.success && response.data.length > 0) {
-                                            let html = "";
-                                            response.data.forEach(function(student) {
-                                                // Store full data in onclick
-                                                let studentJson = JSON.stringify(student).replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                                                html += '<div class="search-result-item" onclick="selectStudent(&quot;' + studentJson + '&quot;)">';
-                                                html += '<strong>' + escapeHtml(student.name) + '</strong><br>';
-                                                html += '<small>' + escapeHtml(student.email);
-                                                if (student.student_id) {
-                                                    html += ' | ID: ' + escapeHtml(student.student_id);
-                                                }
-                                                html += '</small>';
-                                                html += '<div class="app-info">Applied for: ' + escapeHtml(student.hostel_name) + ' (' + escapeHtml(student.room_type_name) + ')</div>';
-                                                html += '</div>';
-                                            });
-                                            results.innerHTML = html;
-                                            results.style.display = "block";
-                                        } else {
-                                            results.innerHTML = '<div class="search-result-item" style="color:#888;">No eligible students found.<br><small>Students must have APPROVED application and no active allocation.</small></div>';
-                                            results.style.display = "block";
-                                        }
-                                    }
-                                };
-                                
-                                xhr.send();
-                            }, 200);
-                        }
-                        
-                        function selectStudent(studentJson) {
-                            let student = JSON.parse(studentJson.replace(/&quot;/g, '"'));
-                            selectedStudentData = student;
-                            
-                            // Set hidden fields
-                            document.getElementById("student_id").value = student.id;
-                            document.getElementById("application_id").value = student.application_id;
-                            document.getElementById("student_search").value = student.name;
-                            document.getElementById("studentSearchResults").style.display = "none";
+                            // Set hidden application ID
+                            document.getElementById("application_id").value = selectedOption.dataset.applicationId;
                             
                             // Show application info
                             document.getElementById("applicationInfo").style.display = "block";
                             document.getElementById("appInfoContent").innerHTML = 
-                                'Hostel: <strong>' + escapeHtml(student.hostel_name) + '</strong> | ' +
-                                'Room Type: <strong>' + escapeHtml(student.room_type_name) + '</strong>';
+                                'Hostel: <strong>' + escapeHtml(selectedOption.dataset.hostelName) + '</strong> | ' +
+                                'Room Type: <strong>' + escapeHtml(selectedOption.dataset.roomTypeName) + '</strong>';
                             
-                            // Auto-select hostel
+                            // Auto-select hostel from student's application
                             let hostelSelect = document.getElementById("hostel_id");
-                            hostelSelect.value = student.hostel_id;
-                            hostelSelect.disabled = false;
+                            hostelSelect.value = selectedOption.dataset.hostelId;
                             
                             // Enable submit button
                             document.getElementById("submitBtn").disabled = false;
                             
                             // Load floors for this hostel
                             loadFloors();
+                        }
+                        
+                        function resetDependentDropdowns() {
+                            document.getElementById("floor_id").innerHTML = '<option value="">Select Floor</option>';
+                            document.getElementById("floor_id").disabled = true;
+                            document.getElementById("room_id").innerHTML = '<option value="">Select Room</option>';
+                            document.getElementById("room_id").disabled = true;
+                            document.getElementById("seat_id").innerHTML = '<option value="">Select Seat</option>';
+                            document.getElementById("seat_id").disabled = true;
                         }
                         
                         function escapeHtml(text) {
@@ -370,38 +369,13 @@ $page = 'admin_allocations';
                         }
                         
                         // Add event listeners
-                        document.getElementById("student_search").addEventListener("input", searchStudents);
+                        document.getElementById("student_id").addEventListener("change", onStudentChange);
                         document.getElementById("hostel_id").addEventListener("change", loadFloors);
                         document.getElementById("floor_id").addEventListener("change", loadRooms);
                         document.getElementById("room_id").addEventListener("change", loadSeats);
                         
-                        // Hide search results when clicking outside
-                        document.addEventListener("click", function(e) {
-                            let searchBox = document.getElementById("student_search");
-                            let results = document.getElementById("studentSearchResults");
-                            if (!searchBox.contains(e.target) && !results.contains(e.target)) {
-                                results.style.display = "none";
-                            }
-                        });
-                        
-                        // Clear form if student search is cleared
-                        document.getElementById("student_search").addEventListener("change", function() {
-                            if (!this.value.trim()) {
-                                document.getElementById("student_id").value = "";
-                                document.getElementById("application_id").value = "";
-                                document.getElementById("applicationInfo").style.display = "none";
-                                document.getElementById("hostel_id").value = "";
-                                document.getElementById("hostel_id").disabled = true;
-                                document.getElementById("floor_id").innerHTML = '<option value="">Select Floor</option>';
-                                document.getElementById("floor_id").disabled = true;
-                                document.getElementById("room_id").innerHTML = '<option value="">Select Room</option>';
-                                document.getElementById("room_id").disabled = true;
-                                document.getElementById("seat_id").innerHTML = '<option value="">Select Seat</option>';
-                                document.getElementById("seat_id").disabled = true;
-                                document.getElementById("submitBtn").disabled = true;
-                                selectedStudentData = null;
-                            }
-                        });
+                        // Load students on page load
+                        document.addEventListener("DOMContentLoaded", loadApprovedStudents);
                     </script>
                     
                 <?php elseif ($action === 'edit' && isset($data['allocation'])): ?>
@@ -577,32 +551,31 @@ $page = 'admin_allocations';
                         <a href="index.php?page=admin_allocations&action=add" class="btn btn-primary">Create New Allocation</a>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_allocations">
-                            <select name="status" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="allocSearch" class="form-control" placeholder="Search by student name..." data-table-search="allocationsTable">
+                            <select id="statusFilter" class="form-control" data-filter-table="allocationsTable" data-filter-column="6">
                                 <option value="">All Status</option>
-                                <option value="ACTIVE" <?php echo (isset($_GET['status']) && $_GET['status'] === 'ACTIVE') ? 'selected' : ''; ?>>Active</option>
-                                <option value="ENDED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'ENDED') ? 'selected' : ''; ?>>Ended</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="ENDED">Ended</option>
                             </select>
-                            <select name="hostel_id" class="form-control">
+                            <select id="hostelFilter" class="form-control" data-filter-table="allocationsTable" data-filter-column="2">
                                 <option value="">All Hostels</option>
                                 <?php if (!empty($data['hostels'])): ?>
                                     <?php foreach ($data['hostels'] as $hostel): ?>
-                                        <option value="<?php echo (int)$hostel['id']; ?>" <?php echo (isset($_GET['hostel_id']) && $_GET['hostel_id'] == $hostel['id']) ? 'selected' : ''; ?>>
+                                        <option value="<?php echo htmlspecialchars($hostel['name']); ?>">
                                             <?php echo htmlspecialchars($hostel['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="allocationsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>

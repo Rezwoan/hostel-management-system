@@ -10,6 +10,7 @@ $page = 'admin_invoices';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -46,13 +47,18 @@ $page = 'admin_invoices';
                                     <option value="">Select Student</option>
                                     <?php if (!empty($data['students'])): ?>
                                         <?php foreach ($data['students'] as $student): ?>
-                                            <option value="<?php echo (int)$student['id']; ?>">
+                                            <option value="<?php echo (int)$student['id']; ?>" 
+                                                    data-hostel-id="<?php echo (int)$student['hostel_id']; ?>">
                                                 <?php echo htmlspecialchars($student['name']); ?> 
                                                 (<?php echo htmlspecialchars($student['student_id'] ?? $student['email']); ?>)
+                                                - <?php echo htmlspecialchars($student['hostel_name']); ?>, Room <?php echo htmlspecialchars($student['room_number']); ?>
                                             </option>
                                         <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="" disabled>No students with active allocations</option>
                                     <?php endif; ?>
                                 </select>
+                                <small class="form-hint">Only students with active room allocations are shown</small>
                             </div>
                             
                             <div class="form-group">
@@ -94,6 +100,17 @@ $page = 'admin_invoices';
                             </div>
                         </form>
                     </div>
+                    
+                    <script>
+                        // Auto-select hostel based on student's allocation
+                        document.getElementById('student_user_id').addEventListener('change', function() {
+                            let selectedOption = this.options[this.selectedIndex];
+                            let hostelId = selectedOption.dataset.hostelId;
+                            if (hostelId) {
+                                document.getElementById('hostel_id').value = hostelId;
+                            }
+                        });
+                    </script>
                     
                 <?php elseif ($action === 'edit' && isset($data['invoice'])): ?>
                     <!-- Edit Invoice Form -->
@@ -308,30 +325,28 @@ $page = 'admin_invoices';
                         <a href="index.php?page=admin_invoices&action=add" class="btn btn-primary">Generate New Invoice</a>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_invoices">
-                            <select name="status" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="invoiceSearch" class="form-control" placeholder="Search student..." data-table-search="invoicesTable">
+                            <select id="statusFilter" class="form-control" data-filter-table="invoicesTable" data-filter-column="5">
                                 <option value="">All Status</option>
-                                <option value="PENDING" <?php echo (isset($_GET['status']) && $_GET['status'] === 'PENDING') ? 'selected' : ''; ?>>Pending</option>
-                                <option value="PAID" <?php echo (isset($_GET['status']) && $_GET['status'] === 'PAID') ? 'selected' : ''; ?>>Paid</option>
-                                <option value="OVERDUE" <?php echo (isset($_GET['status']) && $_GET['status'] === 'OVERDUE') ? 'selected' : ''; ?>>Overdue</option>
-                                <option value="CANCELLED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'CANCELLED') ? 'selected' : ''; ?>>Cancelled</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="PAID">Paid</option>
+                                <option value="OVERDUE">Overdue</option>
+                                <option value="CANCELLED">Cancelled</option>
                             </select>
-                            <select name="fee_period_id" class="form-control">
+                            <select id="periodFilter" class="form-control" data-filter-table="invoicesTable" data-filter-column="3">
                                 <option value="">All Periods</option>
                                 <?php if (!empty($data['fee_periods'])): ?>
                                     <?php foreach ($data['fee_periods'] as $period): ?>
-                                        <option value="<?php echo (int)$period['id']; ?>" <?php echo (isset($_GET['fee_period_id']) && $_GET['fee_period_id'] == $period['id']) ? 'selected' : ''; ?>>
+                                        <option value="<?php echo htmlspecialchars($period['name']); ?>">
                                             <?php echo htmlspecialchars($period['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <input type="text" name="search" class="form-control" placeholder="Search student..." value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>">
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <!-- Summary Stats -->
@@ -352,11 +367,6 @@ $page = 'admin_invoices';
                             <div class="stat-value"><?php echo (int)($data['stats']['overdue_count'] ?? 0); ?></div>
                             <div class="stat-label">Overdue</div>
                         </div>
-                    </div>
-                    
-                    <!-- Live Search -->
-                    <div class="search-box" style="margin-bottom: 15px;">
-                        <input type="text" id="tableSearch" class="form-control" placeholder="Search invoices...">
                     </div>
                     
                     <div class="table-card">

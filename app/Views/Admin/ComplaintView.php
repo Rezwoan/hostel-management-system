@@ -10,6 +10,7 @@ $page = 'admin_complaints';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -158,35 +159,34 @@ $page = 'admin_complaints';
                         <h2>All Complaints</h2>
                     </div>
                     
-                    <!-- Filter Bar -->
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <form action="index.php" method="GET" class="filter-form">
-                            <input type="hidden" name="page" value="admin_complaints">
-                            <select name="status" class="form-control">
+                        <div class="filter-form">
+                            <input type="text" id="complaintSearch" class="form-control" placeholder="Search complaints..." data-table-search="complaintsTable">
+                            <select id="statusFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="5">
                                 <option value="">All Status</option>
-                                <option value="PENDING" <?php echo (isset($_GET['status']) && $_GET['status'] === 'PENDING') ? 'selected' : ''; ?>>Pending</option>
-                                <option value="IN_PROGRESS" <?php echo (isset($_GET['status']) && $_GET['status'] === 'IN_PROGRESS') ? 'selected' : ''; ?>>In Progress</option>
-                                <option value="RESOLVED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'RESOLVED') ? 'selected' : ''; ?>>Resolved</option>
-                                <option value="CLOSED" <?php echo (isset($_GET['status']) && $_GET['status'] === 'CLOSED') ? 'selected' : ''; ?>>Closed</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="RESOLVED">Resolved</option>
+                                <option value="CLOSED">Closed</option>
                             </select>
-                            <select name="category_id" class="form-control">
+                            <select id="categoryFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="2">
                                 <option value="">All Categories</option>
                                 <?php if (!empty($data['categories'])): ?>
                                     <?php foreach ($data['categories'] as $cat): ?>
-                                        <option value="<?php echo (int)$cat['id']; ?>" <?php echo (isset($_GET['category_id']) && $_GET['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                        <option value="<?php echo htmlspecialchars($cat['name']); ?>">
                                             <?php echo htmlspecialchars($cat['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <select name="priority" class="form-control">
+                            <select id="priorityFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="4">
                                 <option value="">All Priority</option>
-                                <option value="HIGH" <?php echo (isset($_GET['priority']) && $_GET['priority'] === 'HIGH') ? 'selected' : ''; ?>>High</option>
-                                <option value="NORMAL" <?php echo (isset($_GET['priority']) && $_GET['priority'] === 'NORMAL') ? 'selected' : ''; ?>>Normal</option>
-                                <option value="LOW" <?php echo (isset($_GET['priority']) && $_GET['priority'] === 'LOW') ? 'selected' : ''; ?>>Low</option>
+                                <option value="HIGH">High</option>
+                                <option value="NORMAL">Normal</option>
+                                <option value="LOW">Low</option>
                             </select>
-                            <button type="submit" class="btn btn-secondary">Filter</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <!-- Stats Summary -->
@@ -211,7 +211,7 @@ $page = 'admin_complaints';
                     
                     <div class="table-card">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="complaintsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>

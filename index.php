@@ -98,6 +98,16 @@ switch ($page) {
         require_once __DIR__ . '/app/Controllers/Admin/AdminStudentProfileController.php';
         break;
         
+    case 'admin_managers':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminManagerController.php';
+        break;
+        
+    case 'admin_admins':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminAdminController.php';
+        break;
+        
     case 'admin_hostels':
         require_role('ADMIN');
         require_once __DIR__ . '/app/Controllers/Admin/AdminHostelController.php';

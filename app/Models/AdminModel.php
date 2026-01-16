@@ -184,6 +184,82 @@ function getAllStudents() {
     return $students;
 }
 
+function getAllManagers() {
+    $conn = dbConnect();
+    $sql = "SELECT u.*, r.name as role_name
+            FROM users u 
+            JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles r ON ur.role_id = r.id
+            WHERE r.name = 'MANAGER'
+            ORDER BY u.id DESC";
+    $result = mysqli_query($conn, $sql);
+    $managers = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $managers;
+}
+
+function getManagerById($userId) {
+    $conn = dbConnect();
+    $sql = "SELECT u.*, r.name as role_name
+            FROM users u 
+            JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles r ON ur.role_id = r.id
+            WHERE u.id = $userId AND r.name = 'MANAGER'";
+    $result = mysqli_query($conn, $sql);
+    $manager = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $manager;
+}
+
+function getAllAdminUsers() {
+    $conn = dbConnect();
+    $sql = "SELECT u.*, r.name as role_name
+            FROM users u 
+            JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles r ON ur.role_id = r.id
+            WHERE r.name = 'ADMIN'
+            ORDER BY u.id DESC";
+    $result = mysqli_query($conn, $sql);
+    $admins = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $admins;
+}
+
+function getAdminById($userId) {
+    $conn = dbConnect();
+    $sql = "SELECT u.*, r.name as role_name
+            FROM users u 
+            JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles r ON ur.role_id = r.id
+            WHERE u.id = $userId AND r.name = 'ADMIN'";
+    $result = mysqli_query($conn, $sql);
+    $admin = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $admin;
+}
+
+// Get only students who have active room allocations (for invoice creation)
+function getStudentsWithActiveAllocations() {
+    $conn = dbConnect();
+    $sql = "SELECT DISTINCT u.id, u.name, u.email, sp.student_id, 
+                   a.id as allocation_id, a.hostel_id, h.name as hostel_name, 
+                   rm.room_no as room_number, s.seat_label
+            FROM users u 
+            JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles ro ON ur.role_id = ro.id
+            JOIN student_profiles sp ON u.id = sp.user_id 
+            JOIN allocations a ON u.id = a.student_user_id AND a.status = 'ACTIVE'
+            JOIN hostels h ON a.hostel_id = h.id
+            JOIN seats s ON a.seat_id = s.id
+            JOIN rooms rm ON s.room_id = rm.id
+            WHERE ro.name = 'STUDENT' AND u.status = 'ACTIVE'
+            ORDER BY u.name ASC";
+    $result = mysqli_query($conn, $sql);
+    $students = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $students;
+}
+
 function getStudentById($userId) {
     $conn = dbConnect();
     $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address 

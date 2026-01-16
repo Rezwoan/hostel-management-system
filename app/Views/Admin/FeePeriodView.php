@@ -66,7 +66,7 @@ $page = 'admin_fee_periods';
                         </form>
                     </div>
                     
-                <?php elseif ($action === 'edit' && isset($data['fee_period'])): ?>
+                <?php elseif ($action === 'edit' && isset($data['period'])): ?>
                     <!-- Edit Fee Period Form -->
                     <div class="breadcrumb">
                         <a href="index.php?page=admin_fee_periods">Fee Periods</a>
@@ -78,25 +78,25 @@ $page = 'admin_fee_periods';
                         <h3>Edit Fee Period</h3>
                         <form action="index.php?page=admin_fee_periods" method="POST">
                             <input type="hidden" name="form_action" value="update_fee_period">
-                            <input type="hidden" name="id" value="<?php echo (int)$data['fee_period']['id']; ?>">
+                            <input type="hidden" name="id" value="<?php echo (int)$data['period']['id']; ?>">
                             
                             <div class="form-group">
                                 <label for="name">Period Name <span class="required">*</span></label>
                                 <input type="text" id="name" name="name" class="form-control" required
-                                       value="<?php echo htmlspecialchars($data['fee_period']['name'] ?? ''); ?>">
+                                       value="<?php echo htmlspecialchars($data['period']['name'] ?? ''); ?>">
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="start_date">Start Date <span class="required">*</span></label>
                                     <input type="date" id="start_date" name="start_date" class="form-control" required
-                                           value="<?php echo htmlspecialchars($data['fee_period']['start_date'] ?? ''); ?>">
+                                           value="<?php echo htmlspecialchars($data['period']['start_date'] ?? ''); ?>">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="end_date">End Date <span class="required">*</span></label>
                                     <input type="date" id="end_date" name="end_date" class="form-control" required
-                                           value="<?php echo htmlspecialchars($data['fee_period']['end_date'] ?? ''); ?>">
+                                           value="<?php echo htmlspecialchars($data['period']['end_date'] ?? ''); ?>">
                                 </div>
                             </div>
                             
@@ -107,7 +107,7 @@ $page = 'admin_fee_periods';
                         </form>
                     </div>
                     
-                <?php elseif ($action === 'view' && isset($data['fee_period'])): ?>
+                <?php elseif ($action === 'view' && isset($data['period'])): ?>
                     <!-- View Fee Period Details -->
                     <div class="breadcrumb">
                         <a href="index.php?page=admin_fee_periods">Fee Periods</a>
@@ -119,23 +119,23 @@ $page = 'admin_fee_periods';
                         <h3>Fee Period Details</h3>
                         <div class="detail-row">
                             <div class="detail-label">ID</div>
-                            <div class="detail-value"><?php echo (int)$data['fee_period']['id']; ?></div>
+                            <div class="detail-value"><?php echo (int)$data['period']['id']; ?></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Name</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['fee_period']['name'] ?? ''); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['period']['name'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Start Date</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['fee_period']['start_date'] ?? ''); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['period']['start_date'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">End Date</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['fee_period']['end_date'] ?? ''); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['period']['end_date'] ?? ''); ?></div>
                         </div>
                         
                         <div class="form-actions">
-                            <a href="index.php?page=admin_fee_periods&action=edit&id=<?php echo (int)$data['fee_period']['id']; ?>" class="btn btn-primary">Edit Fee Period</a>
+                            <a href="index.php?page=admin_fee_periods&action=edit&id=<?php echo (int)$data['period']['id']; ?>" class="btn btn-primary">Edit Fee Period</a>
                             <a href="index.php?page=admin_fee_periods" class="btn btn-secondary">Back to List</a>
                         </div>
                     </div>
@@ -160,8 +160,8 @@ $page = 'admin_fee_periods';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (!empty($data['fee_periods'])): ?>
-                                        <?php foreach ($data['fee_periods'] as $period): ?>
+                                    <?php if (!empty($data['periods'])): ?>
+                                        <?php foreach ($data['periods'] as $period): ?>
                                             <tr>
                                                 <td><?php echo (int)$period['id']; ?></td>
                                                 <td><?php echo htmlspecialchars($period['name']); ?></td>

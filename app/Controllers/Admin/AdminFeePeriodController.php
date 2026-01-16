@@ -57,7 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Fee Period Management';
 $data = [];
 
-if ($action === 'edit') {
+if ($action === 'view') {
+    $id = (int)$_GET['id'];
+    $data['period'] = getFeePeriodById($id);
+    $pageTitle = 'View Fee Period';
+} elseif ($action === 'edit') {
     $id = (int)$_GET['id'];
     $data['period'] = getFeePeriodById($id);
     $pageTitle = 'Edit Fee Period';

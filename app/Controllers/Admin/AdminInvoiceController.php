@@ -25,6 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Failed to create invoice.';
         }
+    } elseif ($formAction === 'update_invoice') {
+        $id = (int)$_POST['id'];
+        $studentUserId = (int)$_POST['student_user_id'];
+        $hostelId = (int)$_POST['hostel_id'];
+        $periodId = (int)$_POST['period_id'];
+        $amountDue = (float)$_POST['amount_due'];
+        $status = $_POST['status'];
+        
+        $result = updateInvoice($id, $studentUserId, $hostelId, $periodId, $amountDue, $status, $actorUserId);
+        if ($result) {
+            header('Location: index.php?page=admin_invoices&msg=invoice_updated');
+            exit;
+        } else {
+            $error = 'Failed to update invoice.';
+        }
     } elseif ($formAction === 'update_invoice_status') {
         $id = (int)$_POST['id'];
         $status = $_POST['status'];
@@ -57,6 +72,13 @@ if ($action === 'view') {
     $data['invoice'] = getInvoiceById($id);
     $data['payments'] = getPaymentsByInvoice($id);
     $pageTitle = 'View Invoice';
+} elseif ($action === 'edit') {
+    $id = (int)$_GET['id'];
+    $data['invoice'] = getInvoiceById($id);
+    $data['students'] = getAllStudents();
+    $data['hostels'] = getAllHostels();
+    $data['periods'] = getAllFeePeriods();
+    $pageTitle = 'Edit Invoice';
 } elseif ($action === 'add') {
     $pageTitle = 'Create Invoice';
     $data['students'] = getAllStudents();
@@ -64,6 +86,7 @@ if ($action === 'view') {
     $data['periods'] = getAllFeePeriods();
 } else {
     $data['invoices'] = getAllInvoices();
+    $data['stats'] = getInvoiceStats();
 }
 
 // Handle success messages

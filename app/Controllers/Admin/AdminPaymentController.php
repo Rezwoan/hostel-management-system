@@ -18,12 +18,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $method = $_POST['method'];
         $referenceNo = trim($_POST['reference_no']);
         
-        $result = recordPayment($invoiceId, $amountPaid, $method, $referenceNo, $actorUserId);
-        if ($result) {
-            header('Location: index.php?page=admin_payments&msg=payment_recorded');
-            exit;
+        // Server-side validation: Check if payment exceeds remaining balance
+        $invoice = getInvoiceById($invoiceId);
+        if ($invoice) {
+            $amountDue = (float)$invoice['amount_due'];
+            $paidAmount = (float)($invoice['paid_amount'] ?? 0);
+            $balance = $amountDue - $paidAmount;
+            
+            if ($amountPaid <= 0) {
+                $error = 'Payment amount must be greater than zero.';
+            } elseif ($amountPaid > $balance) {
+                $error = 'Payment amount ($' . number_format($amountPaid, 2) . ') exceeds remaining balance ($' . number_format($balance, 2) . ').';
+            } else {
+                $result = recordPayment($invoiceId, $amountPaid, $method, $referenceNo, $actorUserId);
+                if ($result) {
+                    header('Location: index.php?page=admin_payments&msg=payment_recorded');
+                    exit;
+                } else {
+                    $error = 'Failed to record payment.';
+                }
+            }
         } else {
-            $error = 'Failed to record payment.';
+            $error = 'Invalid invoice selected.';
         }
     }
 }
@@ -41,6 +57,7 @@ if ($action === 'add') {
     $pageTitle = 'View Payment';
 } else {
     $data['payments'] = getAllPayments();
+    $data['stats'] = getPaymentStats();
 }
 
 // Handle success messages

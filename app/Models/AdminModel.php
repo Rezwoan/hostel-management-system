@@ -941,7 +941,8 @@ function deleteFeePeriod($id, $actorUserId) {
 function getAllInvoices() {
     $conn = dbConnect();
     $sql = "SELECT si.*, u.name as student_name, u.email as student_email, 
-                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name 
+                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name,
+                   COALESCE((SELECT SUM(p.amount_paid) FROM payments p WHERE p.invoice_id = si.id), 0) as paid_amount
             FROM student_invoices si 
             JOIN users u ON si.student_user_id = u.id 
             LEFT JOIN student_profiles sp ON u.id = sp.user_id
@@ -957,7 +958,8 @@ function getAllInvoices() {
 function getInvoiceById($id) {
     $conn = dbConnect();
     $sql = "SELECT si.*, u.name as student_name, u.email as student_email,
-                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name 
+                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name,
+                   COALESCE((SELECT SUM(p.amount_paid) FROM payments p WHERE p.invoice_id = si.id), 0) as paid_amount
             FROM student_invoices si 
             JOIN users u ON si.student_user_id = u.id 
             LEFT JOIN student_profiles sp ON u.id = sp.user_id
@@ -1007,6 +1009,44 @@ function updateInvoiceStatus($id, $status, $actorUserId) {
     return $result;
 }
 
+function updateInvoice($id, $studentUserId, $hostelId, $periodId, $amountDue, $status, $actorUserId) {
+    $conn = dbConnect();
+    
+    $oldData = getInvoiceById($id);
+    
+    $sql = "UPDATE student_invoices SET 
+            student_user_id = $studentUserId,
+            hostel_id = $hostelId,
+            period_id = $periodId,
+            amount_due = $amountDue,
+            status = '$status'
+            WHERE id = $id";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    
+    if ($result) {
+        $meta = json_encode([
+            'old' => [
+                'student_user_id' => $oldData['student_user_id'],
+                'hostel_id' => $oldData['hostel_id'],
+                'period_id' => $oldData['period_id'],
+                'amount_due' => $oldData['amount_due'],
+                'status' => $oldData['status']
+            ],
+            'new' => [
+                'student_user_id' => $studentUserId,
+                'hostel_id' => $hostelId,
+                'period_id' => $periodId,
+                'amount_due' => $amountDue,
+                'status' => $status
+            ]
+        ]);
+        createAuditLog($actorUserId, 'UPDATE', 'student_invoices', $id, $meta);
+    }
+    
+    return $result;
+}
+
 function deleteInvoice($id, $actorUserId) {
     $conn = dbConnect();
     
@@ -1022,6 +1062,37 @@ function deleteInvoice($id, $actorUserId) {
     }
     
     return $result;
+}
+
+function getInvoiceStats() {
+    $conn = dbConnect();
+    
+    // Total amount due across all invoices
+    $sql = "SELECT 
+                COALESCE(SUM(amount_due), 0) as total_amount,
+                COALESCE(SUM(CASE WHEN status = 'DUE' THEN 1 ELSE 0 END), 0) as due_count,
+                COALESCE(SUM(CASE WHEN status = 'PARTIAL' THEN 1 ELSE 0 END), 0) as partial_count,
+                COALESCE(SUM(CASE WHEN status = 'PAID' THEN 1 ELSE 0 END), 0) as paid_count
+            FROM student_invoices";
+    $result = mysqli_query($conn, $sql);
+    $invoiceStats = mysqli_fetch_assoc($result);
+    
+    // Total amount collected from payments
+    $sql = "SELECT COALESCE(SUM(amount_paid), 0) as paid_amount FROM payments";
+    $result = mysqli_query($conn, $sql);
+    $paymentStats = mysqli_fetch_assoc($result);
+    
+    mysqli_close($conn);
+    
+    return [
+        'total_amount' => (float)$invoiceStats['total_amount'],
+        'paid_amount' => (float)$paymentStats['paid_amount'],
+        'pending_amount' => (float)$invoiceStats['total_amount'] - (float)$paymentStats['paid_amount'],
+        'due_count' => (int)$invoiceStats['due_count'],
+        'partial_count' => (int)$invoiceStats['partial_count'],
+        'paid_count' => (int)$invoiceStats['paid_count'],
+        'overdue_count' => (int)$invoiceStats['due_count'] // For now, same as due - could add date-based logic
+    ];
 }
 
 // ============================================================
@@ -1057,11 +1128,44 @@ function getPaymentsByInvoice($invoiceId) {
 
 function getPaymentById($id) {
     $conn = dbConnect();
-    $sql = "SELECT p.*, si.student_user_id FROM payments p JOIN student_invoices si ON p.invoice_id = si.id WHERE p.id = $id";
+    $sql = "SELECT p.*, si.student_user_id, si.amount_due, u.name as student_name, r.name as recorder_name
+            FROM payments p 
+            JOIN student_invoices si ON p.invoice_id = si.id 
+            JOIN users u ON si.student_user_id = u.id
+            JOIN users r ON p.recorded_by_user_id = r.id
+            WHERE p.id = $id";
     $result = mysqli_query($conn, $sql);
     $payment = mysqli_fetch_assoc($result);
     mysqli_close($conn);
     return $payment;
+}
+
+function getPaymentStats() {
+    $conn = dbConnect();
+    
+    // Total collected (all time)
+    $sql = "SELECT COALESCE(SUM(amount_paid), 0) as total_collected, COUNT(*) as total_payments FROM payments";
+    $result = mysqli_query($conn, $sql);
+    $totals = mysqli_fetch_assoc($result);
+    
+    // Today's collections
+    $sql = "SELECT COALESCE(SUM(amount_paid), 0) as today_collected FROM payments WHERE DATE(paid_at) = CURDATE()";
+    $result = mysqli_query($conn, $sql);
+    $today = mysqli_fetch_assoc($result);
+    
+    // This month's collections
+    $sql = "SELECT COALESCE(SUM(amount_paid), 0) as this_month FROM payments WHERE YEAR(paid_at) = YEAR(CURDATE()) AND MONTH(paid_at) = MONTH(CURDATE())";
+    $result = mysqli_query($conn, $sql);
+    $month = mysqli_fetch_assoc($result);
+    
+    mysqli_close($conn);
+    
+    return [
+        'total_collected' => (float)$totals['total_collected'],
+        'total_payments' => (int)$totals['total_payments'],
+        'today_collected' => (float)$today['today_collected'],
+        'this_month' => (float)$month['this_month']
+    ];
 }
 
 function recordPayment($invoiceId, $amountPaid, $method, $referenceNo, $recordedByUserId) {
@@ -1071,30 +1175,66 @@ function recordPayment($invoiceId, $amountPaid, $method, $referenceNo, $recorded
             VALUES ($invoiceId, $amountPaid, '$method', $refSql, $recordedByUserId)";
     $result = mysqli_query($conn, $sql);
     $insertId = $result ? mysqli_insert_id($conn) : false;
-    mysqli_close($conn);
     
     if ($insertId) {
+        // Update invoice status based on total payments
+        updateInvoiceStatusFromPayments($conn, $invoiceId);
+        
         $meta = json_encode(['invoice_id' => $invoiceId, 'amount_paid' => $amountPaid, 'method' => $method, 'reference_no' => $referenceNo]);
         createAuditLog($recordedByUserId, 'RECORD_PAYMENT', 'payments', $insertId, $meta);
     }
     
+    mysqli_close($conn);
     return $insertId;
+}
+
+function updateInvoiceStatusFromPayments($conn, $invoiceId) {
+    // Get total paid for this invoice
+    $sql = "SELECT COALESCE(SUM(amount_paid), 0) AS total_paid FROM payments WHERE invoice_id = $invoiceId";
+    $result = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($result);
+    $totalPaid = (float)$row['total_paid'];
+    
+    // Get the invoice amount due
+    $sql = "SELECT amount_due FROM student_invoices WHERE id = $invoiceId";
+    $result = mysqli_query($conn, $sql);
+    $invoice = mysqli_fetch_assoc($result);
+    $amountDue = (float)$invoice['amount_due'];
+    
+    // Determine new status
+    if ($totalPaid >= $amountDue) {
+        $newStatus = 'PAID';
+    } elseif ($totalPaid > 0) {
+        $newStatus = 'PARTIAL';
+    } else {
+        $newStatus = 'DUE';
+    }
+    
+    // Update the invoice status
+    $sql = "UPDATE student_invoices SET status = '$newStatus' WHERE id = $invoiceId";
+    mysqli_query($conn, $sql);
 }
 
 function deletePayment($id, $actorUserId) {
     $conn = dbConnect();
     
     $data = getPaymentById($id);
+    $invoiceId = $data ? $data['invoice_id'] : null;
     
     $sql = "DELETE FROM payments WHERE id = $id";
     $result = mysqli_query($conn, $sql);
-    mysqli_close($conn);
     
     if ($result && $data) {
+        // Recalculate invoice status after payment deletion
+        if ($invoiceId) {
+            updateInvoiceStatusFromPayments($conn, $invoiceId);
+        }
+        
         $meta = json_encode(['invoice_id' => $data['invoice_id'], 'amount_paid' => $data['amount_paid']]);
         createAuditLog($actorUserId, 'DELETE', 'payments', $id, $meta);
     }
     
+    mysqli_close($conn);
     return $result;
 }
 

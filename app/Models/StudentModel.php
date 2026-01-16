@@ -33,8 +33,14 @@ function createStudentAccount($name, $email, $password, $phone, $studentId, $dep
         // Get the ID of the newly created user
         $newUserId = mysqli_insert_id($conn);
 
-        // Step 2: Assign STUDENT role (role_id = 3)
-        $sqlRole = "INSERT INTO user_roles (user_id, role_id) VALUES ($newUserId, 3)";
+        // Step 2: Get the STUDENT role ID and assign it
+        $roleResult = mysqli_query($conn, "SELECT id FROM roles WHERE name = 'STUDENT' LIMIT 1");
+        if (!$roleResult || mysqli_num_rows($roleResult) === 0) {
+            throw new Exception("STUDENT role not found in database");
+        }
+        $studentRoleId = mysqli_fetch_assoc($roleResult)['id'];
+        
+        $sqlRole = "INSERT INTO user_roles (user_id, role_id) VALUES ($newUserId, $studentRoleId)";
         
         if (!mysqli_query($conn, $sqlRole)) {
             throw new Exception("Error assigning role: " . $conn->error);

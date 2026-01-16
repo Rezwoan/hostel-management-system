@@ -37,7 +37,14 @@ function getAllUsers() {
 
 function getUserById($id) {
     $conn = dbConnect();
-    $sql = "SELECT * FROM users WHERE id = $id";
+    $sql = "SELECT u.*, GROUP_CONCAT(r.name) as roles, GROUP_CONCAT(r.id) as role_ids,
+                   sp.student_id, sp.department, sp.session_year, sp.dob, sp.address
+            FROM users u 
+            LEFT JOIN user_roles ur ON u.id = ur.user_id 
+            LEFT JOIN roles r ON ur.role_id = r.id 
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
+            WHERE u.id = $id
+            GROUP BY u.id";
     $result = mysqli_query($conn, $sql);
     $user = mysqli_fetch_assoc($result);
     mysqli_close($conn);
@@ -137,7 +144,9 @@ function changeUserRole($userId, $newRoleId, $actorUserId) {
     $oldRole = mysqli_fetch_assoc($result);
     $oldRoleId = $oldRole ? $oldRole['role_id'] : null;
     
-    $sql = "UPDATE user_roles SET role_id = $newRoleId WHERE user_id = $userId";
+    // Delete existing roles and insert new one (ensures clean state)
+    mysqli_query($conn, "DELETE FROM user_roles WHERE user_id = $userId");
+    $sql = "INSERT INTO user_roles (user_id, role_id) VALUES ($userId, $newRoleId)";
     $result = mysqli_query($conn, $sql);
     mysqli_close($conn);
     
@@ -158,8 +167,9 @@ function getAllStudents() {
     $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address 
             FROM users u 
             JOIN user_roles ur ON u.id = ur.user_id 
+            JOIN roles r ON ur.role_id = r.id
             JOIN student_profiles sp ON u.id = sp.user_id 
-            WHERE ur.role_id = 3 
+            WHERE r.name = 'STUDENT' 
             ORDER BY u.id DESC";
     $result = mysqli_query($conn, $sql);
     $students = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -930,9 +940,11 @@ function deleteFeePeriod($id, $actorUserId) {
 
 function getAllInvoices() {
     $conn = dbConnect();
-    $sql = "SELECT si.*, u.name as student_name, u.email as student_email, h.name as hostel_name, fp.name as period_name 
+    $sql = "SELECT si.*, u.name as student_name, u.email as student_email, 
+                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name 
             FROM student_invoices si 
             JOIN users u ON si.student_user_id = u.id 
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
             JOIN hostels h ON si.hostel_id = h.id 
             JOIN fee_periods fp ON si.period_id = fp.id 
             ORDER BY si.id DESC";
@@ -944,9 +956,11 @@ function getAllInvoices() {
 
 function getInvoiceById($id) {
     $conn = dbConnect();
-    $sql = "SELECT si.*, u.name as student_name, h.name as hostel_name, fp.name as period_name 
+    $sql = "SELECT si.*, u.name as student_name, u.email as student_email,
+                   sp.student_id as student_id_number, h.name as hostel_name, fp.name as period_name 
             FROM student_invoices si 
             JOIN users u ON si.student_user_id = u.id 
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
             JOIN hostels h ON si.hostel_id = h.id 
             JOIN fee_periods fp ON si.period_id = fp.id 
             WHERE si.id = $id";
@@ -1391,12 +1405,24 @@ function getAllAuditLogs() {
     $conn = dbConnect();
     $sql = "SELECT al.*, u.name as actor_name 
             FROM audit_logs al 
-            JOIN users u ON al.actor_user_id = u.id 
+            LEFT JOIN users u ON al.actor_user_id = u.id 
             ORDER BY al.id DESC";
     $result = mysqli_query($conn, $sql);
     $logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
     return $logs;
+}
+
+function getAuditLogById($id) {
+    $conn = dbConnect();
+    $sql = "SELECT al.*, u.name as user_name, u.email as user_email 
+            FROM audit_logs al 
+            LEFT JOIN users u ON al.actor_user_id = u.id 
+            WHERE al.id = $id";
+    $result = mysqli_query($conn, $sql);
+    $log = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $log;
 }
 
 function getAuditLogsByEntity($entityType, $entityId) {
@@ -1466,7 +1492,7 @@ function getDashboardStats() {
     $stats['total_users'] = mysqli_fetch_assoc($result)['count'];
     
     // Total students
-    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM user_roles WHERE role_id = 3");
+    $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE r.name = 'STUDENT'");
     $stats['total_students'] = mysqli_fetch_assoc($result)['count'];
     
     // Total hostels

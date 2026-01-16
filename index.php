@@ -84,8 +84,93 @@ switch ($page) {
     // --- DASHBOARDS ---
     case 'admin_dashboard':
         require_role('ADMIN');
-        // Matches: app/Controllers/Admin/AdminController.php
-        require_once __DIR__ . '/app/Controllers/Admin/AdminController.php';
+        require_once __DIR__ . '/app/Controllers/Admin/AdminDashboardController.php';
+        break;
+    
+    // --- ADMIN MODULES ---
+    case 'admin_users':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminUserController.php';
+        break;
+        
+    case 'admin_students':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminStudentProfileController.php';
+        break;
+        
+    case 'admin_hostels':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminHostelController.php';
+        break;
+        
+    case 'admin_hostel_managers':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminHostelManagerController.php';
+        break;
+        
+    case 'admin_floors':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminFloorController.php';
+        break;
+        
+    case 'admin_room_types':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminRoomTypeController.php';
+        break;
+        
+    case 'admin_rooms':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminRoomController.php';
+        break;
+        
+    case 'admin_seats':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminSeatController.php';
+        break;
+        
+    case 'admin_applications':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminApplicationController.php';
+        break;
+        
+    case 'admin_allocations':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminAllocationController.php';
+        break;
+        
+    case 'admin_fee_periods':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminFeePeriodController.php';
+        break;
+        
+    case 'admin_invoices':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminInvoiceController.php';
+        break;
+        
+    case 'admin_payments':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminPaymentController.php';
+        break;
+        
+    case 'admin_complaint_categories':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminComplaintCategoryController.php';
+        break;
+        
+    case 'admin_complaints':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminComplaintController.php';
+        break;
+        
+    case 'admin_notices':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminNoticeController.php';
+        break;
+        
+    case 'admin_audit_logs':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminAuditLogController.php';
         break;
 
     case 'manager_dashboard':

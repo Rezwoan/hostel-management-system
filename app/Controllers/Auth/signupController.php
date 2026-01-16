@@ -2,6 +2,7 @@
 // app/Controllers/Auth/SignupController.php
 
 require_once __DIR__ . '/../../Models/StudentModel.php';
+require_once __DIR__ . '/../../Models/AdminModel.php';
 
 $error_msg = "";
 $success_msg = "";
@@ -55,7 +56,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $address
             );
 
-            if ($result === true) {
+            if (is_numeric($result)) {
+                // $result is the new user ID
+                logSignupEvent($result, $email, $fullName);
+                $success_msg = "Account created successfully! <a href='index.php?page=login'>Login Here</a>";
+            } elseif ($result === true) {
+                // Legacy support if function returns true
                 $success_msg = "Account created successfully! <a href='index.php?page=login'>Login Here</a>";
             } else {
                 $error_msg = $result;

@@ -7,21 +7,102 @@ require_once __DIR__ . '/Database.php';
 // AUDIT LOG HELPER
 // ============================================================
 
-function createAuditLog($actorUserId, $action, $entityType, $entityId, $metaJson = null) {
-    // Only allow actions that pass database CHECK constraint
-    $allowedActions = ['CREATE', 'APPROVE', 'ASSIGN'];
-    if (!in_array($action, $allowedActions)) {
-        // Skip logging for unsupported actions to avoid CHECK constraint violation
-        return;
+function createAuditLog($actorUserId, $action, $entityType, $entityId, $metaData = null) {
+    $conn = dbConnect();
+    
+    // Prepare the meta JSON - can be array or string
+    $metaJson = null;
+    if ($metaData !== null) {
+        if (is_array($metaData)) {
+            $metaJson = json_encode($metaData);
+        } else {
+            $metaJson = $metaData;
+        }
     }
     
-    $conn = dbConnect();
-    $entityIdSql = $entityId ? $entityId : "NULL";
-    $metaJsonSql = $metaJson ? "'" . $metaJson . "'" : "NULL";
-    $sql = "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, meta_json) 
-            VALUES ($actorUserId, '$action', '$entityType', $entityIdSql, $metaJsonSql)";
-    mysqli_query($conn, $sql);
+    $stmt = mysqli_prepare($conn, 
+        "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, meta_json) 
+         VALUES (?, ?, ?, ?, ?)");
+    
+    mysqli_stmt_bind_param($stmt, "issis", $actorUserId, $action, $entityType, $entityId, $metaJson);
+    mysqli_stmt_execute($stmt);
     mysqli_close($conn);
+}
+
+/**
+ * Get the client's IP address
+ */
+function getClientIP() {
+    $ip = '';
+    
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        // Can contain multiple IPs, get the first one
+        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $ip = trim($ipList[0]);
+    } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    
+    return $ip ?: 'unknown';
+}
+
+/**
+ * Log a login event
+ */
+function logLoginEvent($userId, $email, $success, $role = null) {
+    $ip = getClientIP();
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    
+    $meta = [
+        'email' => $email,
+        'ip_address' => $ip,
+        'user_agent' => substr($userAgent, 0, 200), // Limit length
+        'success' => $success
+    ];
+    
+    if ($role) {
+        $meta['role'] = $role;
+    }
+    
+    if ($success) {
+        createAuditLog($userId, 'LOGIN', 'users', $userId, $meta);
+    } else {
+        // For failed logins, use user ID 0 or find the user ID by email
+        $failUserId = $userId ?: 0;
+        createAuditLog($failUserId > 0 ? $failUserId : 1, 'LOGIN_FAILED', 'users', $failUserId ?: null, $meta);
+    }
+}
+
+/**
+ * Log a signup event
+ */
+function logSignupEvent($userId, $email, $name) {
+    $ip = getClientIP();
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    
+    $meta = [
+        'email' => $email,
+        'name' => $name,
+        'ip_address' => $ip,
+        'user_agent' => substr($userAgent, 0, 200)
+    ];
+    
+    createAuditLog($userId, 'SIGNUP', 'users', $userId, $meta);
+}
+
+/**
+ * Log a logout event
+ */
+function logLogoutEvent($userId) {
+    $ip = getClientIP();
+    
+    $meta = [
+        'ip_address' => $ip
+    ];
+    
+    createAuditLog($userId, 'LOGOUT', 'users', $userId, $meta);
 }
 
 // ============================================================
@@ -1787,6 +1868,26 @@ function getRecentAuditLogs($limit = 50) {
             ORDER BY al.id DESC 
             LIMIT $limit";
     $result = mysqli_query($conn, $sql);
+    $logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $logs;
+}
+
+/**
+ * Get login-related activity logs (LOGIN, LOGIN_FAILED, LOGOUT, SIGNUP)
+ */
+function getLoginActivityLogs($limit = 500) {
+    $conn = dbConnect();
+    $sql = "SELECT al.*, u.name as actor_name, u.email as actor_email
+            FROM audit_logs al 
+            LEFT JOIN users u ON al.actor_user_id = u.id 
+            WHERE al.action IN ('LOGIN', 'LOGIN_FAILED', 'LOGOUT', 'SIGNUP')
+            ORDER BY al.id DESC 
+            LIMIT ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $limit);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
     $logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
     return $logs;

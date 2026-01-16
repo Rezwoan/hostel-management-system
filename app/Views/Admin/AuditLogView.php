@@ -66,10 +66,47 @@ $page = 'admin_audit_logs';
                             <div class="detail-label">Timestamp</div>
                             <div class="detail-value"><?php echo htmlspecialchars($data['log']['created_at'] ?? ''); ?></div>
                         </div>
+                        <?php 
+                        // Parse meta_json for detailed display
+                        $metaData = [];
+                        if (!empty($data['log']['meta_json'])) {
+                            $metaData = json_decode($data['log']['meta_json'], true) ?: [];
+                        }
+                        ?>
+                        <?php if (!empty($metaData['ip_address'])): ?>
+                        <div class="detail-row">
+                            <div class="detail-label">IP Address</div>
+                            <div class="detail-value"><code><?php echo htmlspecialchars($metaData['ip_address']); ?></code></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($metaData['user_agent'])): ?>
+                        <div class="detail-row">
+                            <div class="detail-label">Browser/Device</div>
+                            <div class="detail-value"><small><?php echo htmlspecialchars($metaData['user_agent']); ?></small></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($metaData['email'])): ?>
+                        <div class="detail-row">
+                            <div class="detail-label">Email Used</div>
+                            <div class="detail-value"><?php echo htmlspecialchars($metaData['email']); ?></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (isset($metaData['success'])): ?>
+                        <div class="detail-row">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <?php if ($metaData['success']): ?>
+                                    <span class="badge badge-success">Success</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger">Failed</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <?php if (!empty($data['log']['meta_json'])): ?>
                         <div class="detail-row">
-                            <div class="detail-label">Additional Data</div>
-                            <div class="detail-value"><pre style="background:#f4f6f9;padding:10px;border-radius:4px;overflow:auto;max-height:200px;"><?php echo htmlspecialchars($data['log']['meta_json']); ?></pre></div>
+                            <div class="detail-label">Raw Data</div>
+                            <div class="detail-value"><pre style="background:#f4f6f9;padding:10px;border-radius:4px;overflow:auto;max-height:200px;"><?php echo htmlspecialchars(json_encode($metaData, JSON_PRETTY_PRINT)); ?></pre></div>
                         </div>
                         <?php endif; ?>
                         
@@ -119,11 +156,13 @@ $page = 'admin_audit_logs';
                             <input type="text" id="logSearch" class="form-control" placeholder="Search logs..." data-table-search="auditLogsTable">
                             <select id="actionFilter" class="form-control" data-filter-table="auditLogsTable" data-filter-column="2">
                                 <option value="">All Actions</option>
+                                <option value="LOGIN">Login</option>
+                                <option value="LOGIN_FAILED">Login Failed</option>
+                                <option value="LOGOUT">Logout</option>
+                                <option value="SIGNUP">Signup</option>
                                 <option value="CREATE">Create</option>
                                 <option value="UPDATE">Update</option>
                                 <option value="DELETE">Delete</option>
-                                <option value="LOGIN">Login</option>
-                                <option value="LOGOUT">Logout</option>
                                 <option value="RECORD_PAYMENT">Record Payment</option>
                                 <option value="APPROVE">Approve</option>
                                 <option value="REJECT">Reject</option>
@@ -166,9 +205,9 @@ $page = 'admin_audit_logs';
                                                     <?php 
                                                     $actionType = $log['action'] ?? '';
                                                     $actionClass = 'badge-info';
-                                                    if (in_array($actionType, ['CREATE', 'APPROVE', 'RECORD_PAYMENT'])) $actionClass = 'badge-success';
-                                                    elseif ($actionType === 'DELETE') $actionClass = 'badge-danger';
-                                                    elseif (in_array($actionType, ['UPDATE', 'REJECT'])) $actionClass = 'badge-warning';
+                                                    if (in_array($actionType, ['CREATE', 'APPROVE', 'RECORD_PAYMENT', 'LOGIN', 'SIGNUP'])) $actionClass = 'badge-success';
+                                                    elseif (in_array($actionType, ['DELETE', 'LOGIN_FAILED'])) $actionClass = 'badge-danger';
+                                                    elseif (in_array($actionType, ['UPDATE', 'REJECT', 'LOGOUT'])) $actionClass = 'badge-warning';
                                                     ?>
                                                     <span class="badge <?php echo $actionClass; ?>">
                                                         <?php echo htmlspecialchars($actionType); ?>

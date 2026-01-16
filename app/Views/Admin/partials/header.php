@@ -9,7 +9,7 @@ $hostelPages = ['admin_hostels', 'admin_hostel_managers', 'admin_floors', 'admin
 $allocationPages = ['admin_applications', 'admin_allocations'];
 $financePages = ['admin_fee_periods', 'admin_invoices', 'admin_payments'];
 $supportPages = ['admin_complaint_categories', 'admin_complaints', 'admin_notices'];
-$systemPages = ['admin_audit_logs'];
+$systemPages = ['admin_audit_logs', 'admin_login_activity'];
 
 if (in_array($currentPage, $userPages)) $activeSection = 'users';
 elseif (in_array($currentPage, $hostelPages)) $activeSection = 'hostel';
@@ -125,6 +125,7 @@ elseif ($currentPage === 'admin_dashboard') $activeSection = 'dashboard';
             </button>
             <div class="mobile-submenu <?php echo $activeSection === 'system' ? 'open' : ''; ?>">
                 <a href="index.php?page=admin_audit_logs">Audit Logs</a>
+                <a href="index.php?page=admin_login_activity">Login Activity</a>
             </div>
         </div>
         

@@ -60,7 +60,7 @@ function createStudentAccount($name, $email, $password, $phone, $studentId, $dep
         // All queries successful - save changes
         mysqli_commit($conn);
         mysqli_close($conn);
-        return true;
+        return $newUserId; // Return the new user ID for tracking
 
     } catch (Exception $e) {
         // Something went wrong - undo all changes

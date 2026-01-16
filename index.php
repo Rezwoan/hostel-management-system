@@ -101,6 +101,12 @@ switch ($page) {
         break;
 
     case 'logout':
+        // Log the logout event before destroying session
+        if (isset($_SESSION['user_id'])) {
+            require_once __DIR__ . '/app/Models/AdminModel.php';
+            logLogoutEvent($_SESSION['user_id']);
+        }
+        
         // Clear remember me cookie and token
         if (isset($_COOKIE['hms_remember_token'])) {
             // Delete token from database
@@ -220,6 +226,11 @@ switch ($page) {
     case 'admin_audit_logs':
         require_role('ADMIN');
         require_once __DIR__ . '/app/Controllers/Admin/AdminAuditLogController.php';
+        break;
+        
+    case 'admin_login_activity':
+        require_role('ADMIN');
+        require_once __DIR__ . '/app/Controllers/Admin/AdminLoginActivityController.php';
         break;
 
     case 'manager_dashboard':

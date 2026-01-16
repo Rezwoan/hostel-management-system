@@ -9,7 +9,7 @@ $hostelPages = ['admin_hostels', 'admin_hostel_managers', 'admin_floors', 'admin
 $allocationPages = ['admin_applications', 'admin_allocations'];
 $financePages = ['admin_fee_periods', 'admin_invoices', 'admin_payments'];
 $supportPages = ['admin_complaint_categories', 'admin_complaints', 'admin_notices'];
-$systemPages = ['admin_audit_logs'];
+$systemPages = ['admin_audit_logs', 'admin_login_activity'];
 
 $showSidebar = false;
 $sidebarTitle = '';
@@ -67,6 +67,7 @@ if (in_array($currentPage, $userPages)) {
     $sidebarTitle = 'System';
     $sidebarLinks = [
         ['page' => 'admin_audit_logs', 'label' => 'Audit Logs', 'icon' => '📋'],
+        ['page' => 'admin_login_activity', 'label' => 'Login Activity', 'icon' => '🔐'],
     ];
 }
 

@@ -2,6 +2,7 @@
 // app/Controllers/Auth/LoginController.php
 
 require_once __DIR__ . '/../../Models/AuthModel.php';
+require_once __DIR__ . '/../../Models/AdminModel.php';
 
 // Cookie name for remember me
 define('REMEMBER_COOKIE_NAME', 'hms_remember_token');
@@ -19,6 +20,9 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE[REMEMBER_COOKIE_NAME])) {
         $_SESSION['name'] = $user['name'];
         $_SESSION['email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
+        
+        // Log the auto-login via remember me
+        logLoginEvent($user['id'], $user['email'], true, $user['role'] . ' (Remember Me)');
         
         // Redirect to appropriate dashboard
         if ($user['role'] === 'ADMIN') {
@@ -84,6 +88,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             if ($primaryRole) {
+                // Log successful login
+                logLoginEvent($result['user']['id'], $email, true, $primaryRole);
+                
                 // Handle Remember Me
                 if ($remember) {
                     $token = createRememberToken($result['user']['id']);
@@ -111,11 +118,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             } else {
                 $error_msg = "Login failed: No valid role assigned to this account.";
+                logLoginEvent($result['user']['id'], $email, false);
                 session_destroy(); 
             }
 
         } else {
             $error_msg = $result['message'];
+            // Log failed login attempt
+            logLoginEvent(0, $email, false);
         }
     }
 }

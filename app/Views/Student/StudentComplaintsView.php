@@ -69,54 +69,9 @@ $page = 'student_complaints';
                         </div>
                     </div>
                     
-                    <!-- Complaint Thread -->
-                    <div class="table-card" style="margin-top: 20px;">
-                        <div class="table-card-header">
-                            <h3>Conversation</h3>
-                        </div>
-                        <div class="complaint-thread">
-                            <?php if (!empty($data['messages'])): ?>
-                                <?php foreach ($data['messages'] as $msg): ?>
-                                    <div class="message-item">
-                                        <div class="message-header">
-                                            <strong><?php echo htmlspecialchars($msg['sender_name'] ?? ''); ?></strong>
-                                            <span class="message-time"><?php echo date('M d, Y h:i A', strtotime($msg['created_at'] ?? '')); ?></span>
-                                        </div>
-                                        <div class="message-body">
-                                            <?php echo nl2br(htmlspecialchars($msg['message'] ?? '')); ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <p class="empty-state">No messages yet.</p>
-                            <?php endif; ?>
-                        </div>
+                    <div style="margin-top: 20px;">
+                        <a href="index.php?page=student_complaints" class="btn btn-secondary">Back to List</a>
                     </div>
-                    
-                    <!-- Add Message Form -->
-                    <?php if (in_array($data['complaint']['status'], ['OPEN', 'IN_PROGRESS'])): ?>
-                    <div class="form-card" style="margin-top: 20px;">
-                        <h3>Add Reply</h3>
-                        <form action="index.php?page=student_complaints&action=view&id=<?php echo (int)$data['complaint']['id']; ?>" method="POST">
-                            <input type="hidden" name="form_action" value="add_message">
-                            <input type="hidden" name="complaint_id" value="<?php echo (int)$data['complaint']['id']; ?>">
-                            
-                            <div class="form-group">
-                                <label for="message">Your Message</label>
-                                <textarea name="message" id="message" rows="4" class="form-control" required></textarea>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Send Reply</button>
-                                <a href="index.php?page=student_complaints" class="btn btn-secondary">Back to List</a>
-                            </div>
-                        </form>
-                    </div>
-                    <?php else: ?>
-                        <div style="margin-top: 20px;">
-                            <a href="index.php?page=student_complaints" class="btn btn-secondary">Back to List</a>
-                        </div>
-                    <?php endif; ?>
                     
                 <?php elseif ($action === 'add'): ?>
                     <!-- Create Complaint Form -->

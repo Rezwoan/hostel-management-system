@@ -1546,7 +1546,7 @@ function getAllComplaints() {
 function getComplaintStats() {
     $conn = dbConnect();
     $stats = [
-        'pending' => 0,
+        'open' => 0,
         'in_progress' => 0,
         'resolved' => 0,
         'total' => 0
@@ -1560,7 +1560,7 @@ function getComplaintStats() {
         $count = (int)$row['count'];
         
         if ($status === 'open') {
-            $stats['pending'] = $count;
+            $stats['open'] = $count;
         } elseif ($status === 'in_progress') {
             $stats['in_progress'] = $count;
         } elseif ($status === 'resolved' || $status === 'closed') {
@@ -1575,7 +1575,7 @@ function getComplaintStats() {
 
 function getComplaintById($id) {
     $conn = dbConnect();
-    $sql = "SELECT c.*, u.name as student_name, h.name as hostel_name, cc.name as category_name 
+    $sql = "SELECT c.*, u.name as student_name, u.email as student_email, h.name as hostel_name, cc.name as category_name 
             FROM complaints c 
             JOIN users u ON c.student_user_id = u.id 
             JOIN hostels h ON c.hostel_id = h.id 

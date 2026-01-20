@@ -272,13 +272,13 @@ function student_cancel_application($applicationId, $studentUserId) {
 function student_get_allocation($studentUserId) {
     $conn = dbConnect();
     $sql = "SELECT a.*, h.name as hostel_name, h.code as hostel_code, 
-                   f.floor_number, r.room_number, s.seat_label,
+                   f.floor_no, f.label as floor_label, r.room_no, s.seat_label, s.room_id,
                    rt.name as room_type_name
             FROM allocations a 
             JOIN seats s ON a.seat_id = s.id 
             JOIN rooms r ON s.room_id = r.id 
             JOIN floors f ON r.floor_id = f.id 
-            JOIN hostels h ON f.hostel_id = h.id
+            JOIN hostels h ON a.hostel_id = h.id
             JOIN room_types rt ON r.room_type_id = rt.id
             WHERE a.student_user_id = $studentUserId AND a.status = 'ACTIVE' 
             LIMIT 1";
@@ -293,12 +293,12 @@ function student_get_allocation($studentUserId) {
  */
 function student_get_allocation_history($studentUserId) {
     $conn = dbConnect();
-    $sql = "SELECT a.*, h.name as hostel_name, f.floor_number, r.room_number, s.seat_label 
+    $sql = "SELECT a.*, h.name as hostel_name, f.floor_no, r.room_no, s.seat_label 
             FROM allocations a 
             JOIN seats s ON a.seat_id = s.id 
             JOIN rooms r ON s.room_id = r.id 
             JOIN floors f ON r.floor_id = f.id 
-            JOIN hostels h ON f.hostel_id = h.id 
+            JOIN hostels h ON a.hostel_id = h.id 
             WHERE a.student_user_id = $studentUserId 
             ORDER BY a.start_date DESC";
     $result = mysqli_query($conn, $sql);
@@ -316,12 +316,12 @@ function student_get_allocation_history($studentUserId) {
  */
 function student_get_invoices($studentUserId) {
     $conn = dbConnect();
-    $sql = "SELECT i.*, fp.period_name, fp.fee_amount,
-                   (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.invoice_id = i.id) as paid_amount
+    $sql = "SELECT i.*, fp.name as period_name,
+                   (SELECT COALESCE(SUM(p.amount_paid), 0) FROM payments p WHERE p.invoice_id = i.id) as paid_amount
             FROM student_invoices i 
-            JOIN fee_periods fp ON i.fee_period_id = fp.id 
+            JOIN fee_periods fp ON i.period_id = fp.id 
             WHERE i.student_user_id = $studentUserId 
-            ORDER BY i.created_at DESC";
+            ORDER BY i.generated_at DESC";
     $result = mysqli_query($conn, $sql);
     $invoices = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
@@ -333,12 +333,12 @@ function student_get_invoices($studentUserId) {
  */
 function student_get_pending_invoices($studentUserId) {
     $conn = dbConnect();
-    $sql = "SELECT i.*, fp.period_name, fp.fee_amount,
-                   (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.invoice_id = i.id) as paid_amount
+    $sql = "SELECT i.*, fp.name as period_name,
+                   (SELECT COALESCE(SUM(p.amount_paid), 0) FROM payments p WHERE p.invoice_id = i.id) as paid_amount
             FROM student_invoices i 
-            JOIN fee_periods fp ON i.fee_period_id = fp.id 
-            WHERE i.student_user_id = $studentUserId AND i.status IN ('PENDING', 'PARTIAL') 
-            ORDER BY i.due_date ASC";
+            JOIN fee_periods fp ON i.period_id = fp.id 
+            WHERE i.student_user_id = $studentUserId AND i.status IN ('DUE', 'PARTIAL') 
+            ORDER BY i.generated_at ASC";
     $result = mysqli_query($conn, $sql);
     $invoices = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
@@ -350,12 +350,12 @@ function student_get_pending_invoices($studentUserId) {
  */
 function student_get_payments($studentUserId) {
     $conn = dbConnect();
-    $sql = "SELECT p.*, i.invoice_number, fp.period_name 
+    $sql = "SELECT p.*, fp.name as period_name 
             FROM payments p 
             JOIN student_invoices i ON p.invoice_id = i.id 
-            JOIN fee_periods fp ON i.fee_period_id = fp.id 
+            JOIN fee_periods fp ON i.period_id = fp.id 
             WHERE i.student_user_id = $studentUserId 
-            ORDER BY p.payment_date DESC";
+            ORDER BY p.paid_at DESC";
     $result = mysqli_query($conn, $sql);
     $payments = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
@@ -451,8 +451,8 @@ function student_get_notices() {
     $sql = "SELECT n.*, u.name as created_by_name 
             FROM notices n 
             LEFT JOIN users u ON n.created_by_user_id = u.id 
-            WHERE n.status = 'PUBLISHED' AND (n.target_role = 'ALL' OR n.target_role = 'STUDENT')
-            ORDER BY n.priority DESC, n.published_at DESC 
+            WHERE n.status = 'PUBLISHED'
+            ORDER BY n.created_at DESC 
             LIMIT 20";
     $result = mysqli_query($conn, $sql);
     $notices = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -497,7 +497,8 @@ function student_get_available_seats_count($hostelId) {
             FROM seats s 
             JOIN rooms r ON s.room_id = r.id 
             JOIN floors f ON r.floor_id = f.id 
-            WHERE f.hostel_id = $hostelId AND s.status = 'AVAILABLE'";
+            LEFT JOIN allocations a ON s.id = a.seat_id AND a.status = 'ACTIVE'
+            WHERE f.hostel_id = $hostelId AND s.status = 'ACTIVE' AND a.id IS NULL";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
     mysqli_close($conn);
@@ -509,7 +510,7 @@ function student_get_available_seats_count($hostelId) {
  */
 function student_get_complaint_categories() {
     $conn = dbConnect();
-    $sql = "SELECT * FROM complaint_categories WHERE status = 'ACTIVE' ORDER BY name ASC";
+    $sql = "SELECT * FROM complaint_categories ORDER BY name ASC";
     $result = mysqli_query($conn, $sql);
     $categories = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
@@ -544,14 +545,14 @@ function student_get_dashboard_stats($studentUserId) {
     $stats['has_allocation'] = $row['count'] > 0;
     
     // Pending invoices
-    $sql = "SELECT COUNT(*) as count, COALESCE(SUM(fp.fee_amount), 0) as total_due
+    $sql = "SELECT COUNT(*) as count, COALESCE(SUM(i.amount_due), 0) as total_due,
+                   COALESCE(SUM((SELECT COALESCE(SUM(p.amount_paid), 0) FROM payments p WHERE p.invoice_id = i.id)), 0) as total_paid
             FROM student_invoices i 
-            JOIN fee_periods fp ON i.fee_period_id = fp.id 
-            WHERE i.student_user_id = $studentUserId AND i.status IN ('PENDING', 'PARTIAL')";
+            WHERE i.student_user_id = $studentUserId AND i.status IN ('DUE', 'PARTIAL')";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
     $stats['pending_invoices'] = $row['count'];
-    $stats['total_due'] = $row['total_due'];
+    $stats['total_due'] = (float)$row['total_due'] - (float)$row['total_paid'];
     
     // Open complaints
     $sql = "SELECT COUNT(*) as count FROM complaints 

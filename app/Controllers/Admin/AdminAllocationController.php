@@ -15,15 +15,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($formAction === 'create_allocation') {
         $studentUserId = isset($_POST['student_id']) ? (int)$_POST['student_id'] : (int)$_POST['student_user_id'];
         $seatId = (int)$_POST['seat_id'];
-        $hostelId = (int)$_POST['hostel_id'];
+        $hostelId = isset($_POST['hostel_id']) ? (int)$_POST['hostel_id'] : 0;
         $startDate = $_POST['start_date'];
         
-        $result = createAllocation($studentUserId, $seatId, $hostelId, $startDate, $actorUserId);
-        if ($result) {
-            header('Location: index.php?page=admin_allocations&msg=allocation_created');
-            exit;
+        // If hostel_id is not provided or is 0, get it from the seat selection
+        if ($hostelId <= 0 && $seatId > 0) {
+            $conn = dbConnect();
+            $sql = "SELECT h.id as hostel_id 
+                    FROM seats s 
+                    JOIN rooms r ON s.room_id = r.id 
+                    JOIN floors f ON r.floor_id = f.id 
+                    JOIN hostels h ON f.hostel_id = h.id 
+                    WHERE s.id = $seatId";
+            $result = mysqli_query($conn, $sql);
+            if ($row = mysqli_fetch_assoc($result)) {
+                $hostelId = (int)$row['hostel_id'];
+            }
+            mysqli_close($conn);
+        }
+        
+        if ($hostelId <= 0) {
+            $error = 'Failed to determine hostel. Please ensure seat selection is valid.';
         } else {
-            $error = 'Failed to create allocation.';
+            $result = createAllocation($studentUserId, $seatId, $hostelId, $startDate, $actorUserId);
+            if ($result) {
+                header('Location: index.php?page=admin_allocations&msg=allocation_created');
+                exit;
+            } else {
+                $error = 'Failed to create allocation.';
+            }
         }
     } elseif ($formAction === 'end_allocation') {
         $id = (int)$_POST['id'];

@@ -53,6 +53,7 @@ $page = 'admin_allocations';
                         <form action="index.php?page=admin_allocations" method="POST" id="allocationForm">
                             <input type="hidden" name="form_action" value="create_allocation">
                             <input type="hidden" id="application_id" name="application_id" value="<?php echo $preSelectedAppId; ?>">
+                            <input type="hidden" id="hostel_id_hidden" name="hostel_id" value="<?php echo $preSelectedHostelId; ?>">
                             
                             <!-- Student Selection Dropdown -->
                             <div class="form-group">
@@ -200,6 +201,7 @@ $page = 'admin_allocations';
                             if (!studentSelect.value) {
                                 // Reset form
                                 document.getElementById("application_id").value = "";
+                                document.getElementById("hostel_id_hidden").value = "";
                                 document.getElementById("applicationInfo").style.display = "none";
                                 document.getElementById("hostel_id").value = "";
                                 resetDependentDropdowns();
@@ -207,8 +209,9 @@ $page = 'admin_allocations';
                                 return;
                             }
                             
-                            // Set hidden application ID
+                            // Set hidden application ID and hostel ID
                             document.getElementById("application_id").value = selectedOption.dataset.applicationId;
+                            document.getElementById("hostel_id_hidden").value = selectedOption.dataset.hostelId;
                             
                             // Show application info
                             document.getElementById("applicationInfo").style.display = "block";
@@ -216,7 +219,7 @@ $page = 'admin_allocations';
                                 'Hostel: <strong>' + escapeHtml(selectedOption.dataset.hostelName) + '</strong> | ' +
                                 'Room Type: <strong>' + escapeHtml(selectedOption.dataset.roomTypeName) + '</strong>';
                             
-                            // Auto-select hostel from student's application
+                            // Auto-select hostel from student's application (for display)
                             let hostelSelect = document.getElementById("hostel_id");
                             hostelSelect.value = selectedOption.dataset.hostelId;
                             

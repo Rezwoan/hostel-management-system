@@ -423,7 +423,11 @@ $page = 'admin_invoices';
                                                         <?php if ($status !== 'PAID'): ?>
                                                             <a href="index.php?page=admin_payments&action=add&invoice_id=<?php echo (int)$invoice['id']; ?>" class="btn btn-sm btn-success">Pay</a>
                                                         <?php endif; ?>
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteInvoice(<?php echo (int)$invoice['id']; ?>, this)">Delete</button>
+                                                        <form method="POST" action="index.php?page=admin_invoices" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                                                            <input type="hidden" name="form_action" value="delete_invoice">
+                                                            <input type="hidden" name="id" value="<?php echo (int)$invoice['id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -475,40 +479,6 @@ $page = 'admin_invoices';
             if (pendingAction) pendingAction();
             closeModal();
         });
-        
-        // Delete invoice via AJAX
-        function deleteInvoice(id, btn) {
-            let rowToDelete = btn.closest("tr");
-            
-            showConfirm("Delete Invoice", "Delete this invoice? This cannot be undone.", function() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "app/Controllers/Api/delete_invoice.php", true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4) {
-                        if (this.status == 200) {
-                            try {
-                                let response = JSON.parse(this.responseText);
-                                if (response.success) {
-                                    rowToDelete.style.transition = "opacity 0.3s";
-                                    rowToDelete.style.opacity = "0";
-                                    setTimeout(function() { rowToDelete.remove(); }, 300);
-                                } else {
-                                    alert("Error: " + response.error);
-                                }
-                            } catch (e) {
-                                alert("Server error: " + this.responseText);
-                            }
-                        } else {
-                            alert("Request failed with status: " + this.status);
-                        }
-                    }
-                };
-                
-                xhr.send("id=" + id);
-            });
-        }
         
         // Table search
         document.getElementById("tableSearch")?.addEventListener("keyup", function() {

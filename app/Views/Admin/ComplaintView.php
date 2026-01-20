@@ -68,20 +68,6 @@ $page = 'admin_complaints';
                             <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['created_at'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">Priority</div>
-                            <div class="detail-value">
-                                <?php 
-                                $priority = $data['complaint']['priority'] ?? 'NORMAL';
-                                $priorityClass = 'badge-info';
-                                if ($priority === 'HIGH') $priorityClass = 'badge-danger';
-                                elseif ($priority === 'LOW') $priorityClass = 'badge-secondary';
-                                ?>
-                                <span class="badge <?php echo $priorityClass; ?>">
-                                    <?php echo htmlspecialchars($priority); ?>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="detail-row">
                             <div class="detail-label">Status</div>
                             <div class="detail-value">
                                 <?php 
@@ -90,6 +76,7 @@ $page = 'admin_complaints';
                                 if ($status === 'RESOLVED') $statusClass = 'badge-success';
                                 elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                 elseif ($status === 'CLOSED') $statusClass = 'badge-secondary';
+                                elseif ($status === 'OPEN') $statusClass = 'badge-warning';
                                 ?>
                                 <span class="badge <?php echo $statusClass; ?>">
                                     <?php echo htmlspecialchars($status); ?>
@@ -100,50 +87,28 @@ $page = 'admin_complaints';
                             <div class="detail-label">Description</div>
                             <div class="detail-value"><?php echo nl2br(htmlspecialchars($data['complaint']['description'] ?? '')); ?></div>
                         </div>
-                        <?php if (!empty($data['complaint']['resolution'])): ?>
-                        <div class="detail-row">
-                            <div class="detail-label">Resolution</div>
-                            <div class="detail-value"><?php echo nl2br(htmlspecialchars($data['complaint']['resolution'])); ?></div>
-                        </div>
-                        <?php endif; ?>
                     </div>
                     
                     <!-- Update Status Form -->
                     <?php if (($data['complaint']['status'] ?? '') !== 'CLOSED'): ?>
                     <div class="form-card">
-                        <h3>Update Complaint</h3>
+                        <h3>Update Complaint Status</h3>
                         <form action="index.php?page=admin_complaints" method="POST">
-                            <input type="hidden" name="form_action" value="update_complaint">
+                            <input type="hidden" name="form_action" value="update_complaint_status">
                             <input type="hidden" name="id" value="<?php echo (int)$data['complaint']['id']; ?>">
                             
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="status">Status <span class="required">*</span></label>
-                                    <select id="status" name="status" class="form-control" required>
-                                        <option value="PENDING" <?php echo ($data['complaint']['status'] ?? '') === 'PENDING' ? 'selected' : ''; ?>>Pending</option>
-                                        <option value="IN_PROGRESS" <?php echo ($data['complaint']['status'] ?? '') === 'IN_PROGRESS' ? 'selected' : ''; ?>>In Progress</option>
-                                        <option value="RESOLVED" <?php echo ($data['complaint']['status'] ?? '') === 'RESOLVED' ? 'selected' : ''; ?>>Resolved</option>
-                                        <option value="CLOSED" <?php echo ($data['complaint']['status'] ?? '') === 'CLOSED' ? 'selected' : ''; ?>>Closed</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="priority">Priority</label>
-                                    <select id="priority" name="priority" class="form-control">
-                                        <option value="LOW" <?php echo ($data['complaint']['priority'] ?? '') === 'LOW' ? 'selected' : ''; ?>>Low</option>
-                                        <option value="NORMAL" <?php echo ($data['complaint']['priority'] ?? '') === 'NORMAL' ? 'selected' : ''; ?>>Normal</option>
-                                        <option value="HIGH" <?php echo ($data['complaint']['priority'] ?? '') === 'HIGH' ? 'selected' : ''; ?>>High</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
                             <div class="form-group">
-                                <label for="resolution">Resolution/Response</label>
-                                <textarea id="resolution" name="resolution" class="form-control" rows="4"><?php echo htmlspecialchars($data['complaint']['resolution'] ?? ''); ?></textarea>
+                                <label for="status">Status <span class="required">*</span></label>
+                                <select id="status" name="status" class="form-control" required>
+                                    <option value="OPEN" <?php echo ($data['complaint']['status'] ?? '') === 'OPEN' ? 'selected' : ''; ?>>Open</option>
+                                    <option value="IN_PROGRESS" <?php echo ($data['complaint']['status'] ?? '') === 'IN_PROGRESS' ? 'selected' : ''; ?>>In Progress</option>
+                                    <option value="RESOLVED" <?php echo ($data['complaint']['status'] ?? '') === 'RESOLVED' ? 'selected' : ''; ?>>Resolved</option>
+                                    <option value="CLOSED" <?php echo ($data['complaint']['status'] ?? '') === 'CLOSED' ? 'selected' : ''; ?>>Closed</option>
+                                </select>
                             </div>
                             
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Update Complaint</button>
+                                <button type="submit" class="btn btn-primary">Update Status</button>
                                 <a href="index.php?page=admin_complaints" class="btn btn-secondary">Back to List</a>
                             </div>
                         </form>
@@ -164,9 +129,9 @@ $page = 'admin_complaints';
                     <div class="filter-bar">
                         <div class="filter-form">
                             <input type="text" id="complaintSearch" class="form-control" placeholder="Search complaints..." data-table-search="complaintsTable">
-                            <select id="statusFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="5">
+                            <select id="statusFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="4">
                                 <option value="">All Status</option>
-                                <option value="PENDING">Pending</option>
+                                <option value="OPEN">Open</option>
                                 <option value="IN_PROGRESS">In Progress</option>
                                 <option value="RESOLVED">Resolved</option>
                                 <option value="CLOSED">Closed</option>
@@ -181,20 +146,14 @@ $page = 'admin_complaints';
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
-                            <select id="priorityFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="4">
-                                <option value="">All Priority</option>
-                                <option value="HIGH">High</option>
-                                <option value="NORMAL">Normal</option>
-                                <option value="LOW">Low</option>
-                            </select>
                         </div>
                     </div>
                     
                     <!-- Stats Summary -->
                     <div class="stats-grid" style="margin-bottom: 20px;">
                         <div class="stat-card">
-                            <div class="stat-value"><?php echo (int)($data['stats']['pending'] ?? 0); ?></div>
-                            <div class="stat-label">Pending</div>
+                            <div class="stat-value"><?php echo (int)($data['stats']['open'] ?? 0); ?></div>
+                            <div class="stat-label">Open</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value"><?php echo (int)($data['stats']['in_progress'] ?? 0); ?></div>
@@ -219,7 +178,6 @@ $page = 'admin_complaints';
                                         <th>Subject</th>
                                         <th>Category</th>
                                         <th>Student</th>
-                                        <th>Priority</th>
                                         <th>Status</th>
                                         <th>Date</th>
                                         <th>Actions</th>
@@ -235,17 +193,6 @@ $page = 'admin_complaints';
                                                 <td><?php echo htmlspecialchars($complaint['student_name'] ?? ''); ?></td>
                                                 <td>
                                                     <?php 
-                                                    $priority = $complaint['priority'] ?? 'NORMAL';
-                                                    $priorityClass = 'badge-info';
-                                                    if ($priority === 'HIGH') $priorityClass = 'badge-danger';
-                                                    elseif ($priority === 'LOW') $priorityClass = 'badge-secondary';
-                                                    ?>
-                                                    <span class="badge <?php echo $priorityClass; ?>">
-                                                        <?php echo htmlspecialchars($priority); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php 
                                                     $status = $complaint['status'] ?? 'OPEN';
                                                     $statusClass = 'badge-warning';
                                                     if ($status === 'RESOLVED') $statusClass = 'badge-success';
@@ -257,13 +204,17 @@ $page = 'admin_complaints';
                                                 <td><?php echo htmlspecialchars($complaint['created_at'] ?? ''); ?></td>
                                                 <td>
                                                     <a href="index.php?page=admin_complaints&action=view&id=<?php echo (int)$complaint['id']; ?>" class="btn btn-sm btn-secondary">View</a>
-                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteComplaint(<?php echo (int)$complaint['id']; ?>, this)">Delete</button>
+                                                    <form method="POST" action="index.php?page=admin_complaints" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this complaint?');">
+                                                        <input type="hidden" name="form_action" value="delete_complaint">
+                                                        <input type="hidden" name="id" value="<?php echo (int)$complaint['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                    </form>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td colspan="8" class="empty-state">No complaints found</td>
+                                            <td colspan="7" class="empty-state">No complaints found</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -308,40 +259,6 @@ $page = 'admin_complaints';
             if (pendingAction) pendingAction();
             closeModal();
         });
-        
-        // Delete complaint via AJAX
-        function deleteComplaint(id, btn) {
-            let rowToDelete = btn.closest("tr");
-            
-            showConfirm("Delete Complaint", "Are you sure you want to delete this complaint?", function() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "app/Controllers/Api/delete_complaint.php", true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4) {
-                        if (this.status == 200) {
-                            try {
-                                let response = JSON.parse(this.responseText);
-                                if (response.success) {
-                                    rowToDelete.style.transition = "opacity 0.3s";
-                                    rowToDelete.style.opacity = "0";
-                                    setTimeout(function() { rowToDelete.remove(); }, 300);
-                                } else {
-                                    alert("Error: " + response.error);
-                                }
-                            } catch (e) {
-                                alert("Server error: " + this.responseText);
-                            }
-                        } else {
-                            alert("Request failed with status: " + this.status);
-                        }
-                    }
-                };
-                
-                xhr.send("id=" + id);
-            });
-        }
         
         // Simple table search filter
         document.getElementById("tableSearch")?.addEventListener("keyup", function() {

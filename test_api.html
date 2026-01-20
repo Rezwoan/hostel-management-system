@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Endpoints</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Endpoint Tester</h1>
+    <p>Use this page to test if API endpoints are working correctly.</p>
+    
+    <div class="test-section">
+        <h3>Test 1: Get Approved Students</h3>
+        <button onclick="testApprovedStudents()">Test Approved Students API</button>
+        <div id="result1"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Get Floors (Hostel ID: 1)</h3>
+        <button onclick="testFloors()">Test Floors API</button>
+        <div id="result2"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: Get Rooms (Floor ID: 1)</h3>
+        <button onclick="testRooms()">Test Rooms API</button>
+        <div id="result3"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 4: Get Seats (Room ID: 1)</h3>
+        <button onclick="testSeats()">Test Seats API</button>
+        <div id="result4"></div>
+    </div>
+    
+    <script>
+        function testApprovedStudents() {
+            fetch('app/Controllers/Api/get_approved_students.php')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result1').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('result1').parentElement.className = 
+                        'test-section ' + (data.success ? 'success' : 'error');
+                })
+                .catch(error => {
+                    document.getElementById('result1').innerHTML = 
+                        '<pre>Error: ' + error + '</pre>';
+                    document.getElementById('result1').parentElement.className = 'test-section error';
+                });
+        }
+        
+        function testFloors() {
+            fetch('app/Controllers/Api/get_floors.php?hostel_id=1')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result2').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('result2').parentElement.className = 
+                        'test-section ' + (data.success ? 'success' : 'error');
+                })
+                .catch(error => {
+                    document.getElementById('result2').innerHTML = 
+                        '<pre>Error: ' + error + '</pre>';
+                    document.getElementById('result2').parentElement.className = 'test-section error';
+                });
+        }
+        
+        function testRooms() {
+            fetch('app/Controllers/Api/get_rooms.php?floor_id=1')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result3').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('result3').parentElement.className = 
+                        'test-section ' + (data.success ? 'success' : 'error');
+                })
+                .catch(error => {
+                    document.getElementById('result3').innerHTML = 
+                        '<pre>Error: ' + error + '</pre>';
+                    document.getElementById('result3').parentElement.className = 'test-section error';
+                });
+        }
+        
+        function testSeats() {
+            fetch('app/Controllers/Api/get_seats.php?room_id=1&available_only=1')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result4').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('result4').parentElement.className = 
+                        'test-section ' + (data.success ? 'success' : 'error');
+                })
+                .catch(error => {
+                    document.getElementById('result4').innerHTML = 
+                        '<pre>Error: ' + error + '</pre>';
+                    document.getElementById('result4').parentElement.className = 'test-section error';
+                });
+        }
+    </script>
+</body>
+</html>

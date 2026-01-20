@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX: Get floors by hostel ID
+ * AJAX: Get floors for a specific hostel
  * Usage: GET get_floors.php?hostel_id=1
  */
 session_start();
@@ -21,10 +21,28 @@ if ($hostelId <= 0) {
 }
 
 $conn = dbConnect();
-$sql = "SELECT id, floor_number, name FROM floors WHERE hostel_id = $hostelId ORDER BY floor_number";
+
+$sql = "SELECT id, hostel_id, floor_no, label 
+        FROM floors 
+        WHERE hostel_id = $hostelId 
+        ORDER BY floor_no ASC";
+
 $result = mysqli_query($conn, $sql);
+
+if (!$result) {
+    echo json_encode(["success" => false, "error" => mysqli_error($conn)]);
+    mysqli_close($conn);
+    exit;
+}
+
 $floors = mysqli_fetch_all($result, MYSQLI_ASSOC);
 mysqli_close($conn);
+
+// Rename floor_no to floor_number for frontend compatibility
+foreach ($floors as &$floor) {
+    $floor['floor_number'] = $floor['floor_no'];
+    $floor['name'] = $floor['label'];
+}
 
 echo json_encode(["success" => true, "data" => $floors]);
 ?>

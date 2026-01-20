@@ -48,7 +48,7 @@
                     </div>
                 <?php endif; ?>
 
-                <form action="" method="POST">
+                <form action="" method="POST" enctype="multipart/form-data">
                     
                     <!-- Section 1: Account Details -->
                     <div class="form-section">
@@ -187,6 +187,18 @@
                                 placeholder="Enter your complete home address"
                                 required
                             ><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile_picture">Profile Picture</label>
+                            <input 
+                                type="file" 
+                                id="profile_picture" 
+                                name="profile_picture" 
+                                class="form-control"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                            >
+                            <p class="form-hint">Optional. Allowed formats: JPG, PNG, WEBP. Max size: 2MB</p>
                         </div>
                     </div>
 

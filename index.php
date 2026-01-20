@@ -244,6 +244,36 @@ switch ($page) {
         require_once __DIR__ . '/app/Controllers/Student/StudentController.php';
         break;
 
+    case 'student_applications':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentApplicationsController.php';
+        break;
+
+    case 'student_room':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentRoomController.php';
+        break;
+
+    case 'student_complaints':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentComplaintsController.php';
+        break;
+
+    case 'student_notices':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentNoticesController.php';
+        break;
+
+    case 'student_fees':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentFeesController.php';
+        break;
+
+    case 'student_profile':
+        require_role('STUDENT');
+        require_once __DIR__ . '/app/Controllers/Student/StudentProfileController.php';
+        break;
+
 
     // --- 404 NOT FOUND ---
     default:

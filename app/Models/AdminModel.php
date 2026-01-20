@@ -212,6 +212,29 @@ function deleteUser($id, $actorUserId) {
     // Get user data before deletion for audit
     $userData = getUserById($id);
     
+    // Since audit_logs.actor_user_id is NOT NULL and has FK constraint,
+    // we need to delete audit logs created by this user first
+    $sql1 = "DELETE FROM audit_logs WHERE actor_user_id = $id";
+    mysqli_query($conn, $sql1);
+    
+    // Handle other foreign key constraints by setting references to NULL
+    
+    // Update allocations - set created_by to NULL
+    $sql2 = "UPDATE allocations SET created_by_manager_user_id = NULL WHERE created_by_manager_user_id = $id";
+    mysqli_query($conn, $sql2);
+    
+    // Update notices - set created_by to NULL
+    $sql3 = "UPDATE notices SET created_by_user_id = NULL WHERE created_by_user_id = $id";
+    mysqli_query($conn, $sql3);
+    
+    // Update payments - set recorded_by to NULL
+    $sql4 = "UPDATE payments SET recorded_by_user_id = NULL WHERE recorded_by_user_id = $id";
+    mysqli_query($conn, $sql4);
+    
+    // Update room_applications - set reviewer to NULL (uses ON DELETE SET NULL)
+    // This is handled by FK constraint, no need for manual UPDATE
+    
+    // Now delete the user (CASCADE constraints will handle related records)
     $sql = "DELETE FROM users WHERE id = $id";
     $result = mysqli_query($conn, $sql);
     mysqli_close($conn);
@@ -1523,7 +1546,7 @@ function getAllComplaints() {
 function getComplaintStats() {
     $conn = dbConnect();
     $stats = [
-        'pending' => 0,
+        'open' => 0,
         'in_progress' => 0,
         'resolved' => 0,
         'total' => 0
@@ -1537,7 +1560,7 @@ function getComplaintStats() {
         $count = (int)$row['count'];
         
         if ($status === 'open') {
-            $stats['pending'] = $count;
+            $stats['open'] = $count;
         } elseif ($status === 'in_progress') {
             $stats['in_progress'] = $count;
         } elseif ($status === 'resolved' || $status === 'closed') {
@@ -1552,7 +1575,7 @@ function getComplaintStats() {
 
 function getComplaintById($id) {
     $conn = dbConnect();
-    $sql = "SELECT c.*, u.name as student_name, h.name as hostel_name, cc.name as category_name 
+    $sql = "SELECT c.*, u.name as student_name, u.email as student_email, h.name as hostel_name, cc.name as category_name 
             FROM complaints c 
             JOIN users u ON c.student_user_id = u.id 
             JOIN hostels h ON c.hostel_id = h.id 

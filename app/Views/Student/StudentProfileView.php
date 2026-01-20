@@ -37,6 +37,17 @@ $page = 'student_profile';
                     <!-- View Profile -->
                     <div class="detail-card">
                         <h3>Personal Information</h3>
+                        
+                        <!-- Profile Picture Display -->
+                        <div class="detail-row">
+                            <div class="detail-label">Profile Picture</div>
+                            <div class="detail-value">
+                                <img src="public/<?php echo htmlspecialchars($data['profile']['profile_picture'] ?? 'uploads/profile_pictures/default.png'); ?>?v=<?php echo time(); ?>" 
+                                     alt="Profile Picture" 
+                                     style="width: 150px; height: 150px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd;">
+                            </div>
+                        </div>
+                        
                         <div class="detail-row">
                             <div class="detail-label">Name</div>
                             <div class="detail-value"><?php echo htmlspecialchars($data['profile']['name'] ?? ''); ?></div>
@@ -84,7 +95,7 @@ $page = 'student_profile';
                     <!-- Edit Profile Form -->
                     <div class="form-card" style="margin-top: 30px;" id="editForm">
                         <h3>Edit Profile</h3>
-                        <form action="index.php?page=student_profile" method="POST">
+                        <form action="index.php?page=student_profile" method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="form_action" value="update_profile">
                             
                             <div class="form-row">
@@ -130,6 +141,40 @@ $page = 'student_profile';
                             
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Update Profile Picture Form -->
+                    <div class="form-card" style="margin-top: 30px;">
+                        <h3>Update Profile Picture</h3>
+                        <form action="index.php?page=student_profile" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="form_action" value="update_profile_picture">
+                            
+                            <div class="form-group">
+                                <label>Current Profile Picture</label>
+                                <div style="margin: 10px 0;">
+                                    <img src="public/<?php echo htmlspecialchars($data['profile']['profile_picture'] ?? 'uploads/profile_pictures/default.png'); ?>?v=<?php echo time(); ?>" 
+                                         alt="Current Profile Picture" 
+                                         style="width: 120px; height: 120px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd;">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile_picture">New Profile Picture <span class="required">*</span></label>
+                                <input 
+                                    type="file" 
+                                    id="profile_picture" 
+                                    name="profile_picture" 
+                                    class="form-control"
+                                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                                    required
+                                >
+                                <small class="form-text">Allowed formats: JPG, PNG, WEBP. Max size: 2MB</small>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Update Picture</button>
                             </div>
                         </form>
                     </div>

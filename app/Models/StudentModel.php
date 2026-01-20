@@ -138,7 +138,7 @@ function student_update_password($userId, $newPassword) {
  */
 function student_get_by_id($userId) {
     $conn = dbConnect();
-    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address 
+    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address, sp.profile_picture 
             FROM users u 
             LEFT JOIN student_profiles sp ON u.id = sp.user_id 
             WHERE u.id = $userId 
@@ -563,4 +563,31 @@ function student_get_dashboard_stats($studentUserId) {
     
     mysqli_close($conn);
     return $stats;
+}
+
+// ============================================================
+// PROFILE PICTURE FUNCTIONS
+// ============================================================
+
+/**
+ * Update student profile picture path
+ */
+function student_update_profile_picture($userId, $picturePath) {
+    $conn = dbConnect();
+    $sql = "UPDATE student_profiles SET profile_picture = '$picturePath' WHERE user_id = $userId";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    return $result;
+}
+
+/**
+ * Get student profile picture path
+ */
+function student_get_profile_picture($userId) {
+    $conn = dbConnect();
+    $sql = "SELECT profile_picture FROM student_profiles WHERE user_id = $userId LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $row ? $row['profile_picture'] : 'uploads/profile_pictures/default.png';
 }

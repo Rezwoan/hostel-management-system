@@ -250,12 +250,26 @@ $page = 'admin_applications';
                                                     <div class="action-btns">
                                                         <a href="index.php?page=admin_applications&action=view&id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-secondary">View</a>
                                                         <?php if ($canReview): ?>
-                                                            <button type="button" class="btn btn-sm btn-success" onclick="quickApprove(<?php echo (int)$app['id']; ?>, this)">Approve</button>
-                                                            <button type="button" class="btn btn-sm btn-danger" onclick="showRejectModal(<?php echo (int)$app['id']; ?>)">Reject</button>
+                                                            <form method="POST" action="index.php?page=admin_applications" style="display:inline;" onsubmit="return confirm('Are you sure you want to approve this application?');">
+                                                                <input type="hidden" name="form_action" value="update_application_status">
+                                                                <input type="hidden" name="id" value="<?php echo (int)$app['id']; ?>">
+                                                                <input type="hidden" name="status" value="APPROVED">
+                                                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                            </form>
+                                                            <form method="POST" action="index.php?page=admin_applications" style="display:inline;" onsubmit="return confirm('Are you sure you want to reject this application?');">
+                                                                <input type="hidden" name="form_action" value="update_application_status">
+                                                                <input type="hidden" name="id" value="<?php echo (int)$app['id']; ?>">
+                                                                <input type="hidden" name="status" value="REJECTED">
+                                                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                                            </form>
                                                         <?php elseif ($status === 'APPROVED'): ?>
                                                             <a href="index.php?page=admin_allocations&action=add&student_id=<?php echo (int)$app['student_user_id']; ?>&hostel_id=<?php echo (int)$app['hostel_id']; ?>&app_id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-primary">Allocate</a>
                                                         <?php endif; ?>
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteApplication(<?php echo (int)$app['id']; ?>, this)">Delete</button>
+                                                        <form method="POST" action="index.php?page=admin_applications" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this application?');">
+                                                            <input type="hidden" name="form_action" value="delete_application">
+                                                            <input type="hidden" name="id" value="<?php echo (int)$app['id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -331,137 +345,6 @@ $page = 'admin_applications';
             if (pendingAction) pendingAction();
             closeModal();
         });
-        
-        // Delete application via AJAX
-        function deleteApplication(id, btn) {
-            let rowToDelete = btn.closest("tr");
-            
-            showConfirm("Delete Application", "Are you sure you want to delete this application?", function() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "app/Controllers/Api/delete_application.php", true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4) {
-                        if (this.status == 200) {
-                            try {
-                                let response = JSON.parse(this.responseText);
-                                if (response.success) {
-                                    rowToDelete.style.transition = "opacity 0.3s";
-                                    rowToDelete.style.opacity = "0";
-                                    setTimeout(function() { rowToDelete.remove(); }, 300);
-                                } else {
-                                    alert("Error: " + response.error);
-                                }
-                            } catch (e) {
-                                alert("Server error: " + this.responseText);
-                            }
-                        } else {
-                            alert("Request failed with status: " + this.status);
-                        }
-                    }
-                };
-                
-                xhr.send("id=" + id);
-            }, "Delete", "btn-danger");
-        }
-        
-        // Quick Approve via AJAX
-        function quickApprove(id, btn) {
-            let row = btn.closest("tr");
-            
-            showConfirm("Approve Application", "Are you sure you want to approve this application?", function() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "app/Controllers/Api/update_application_status.php", true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        try {
-                            let response = JSON.parse(this.responseText);
-                            if (response.success) {
-                                // Update status badge
-                                let statusBadge = document.getElementById("status-" + id);
-                                statusBadge.className = "badge badge-success";
-                                statusBadge.textContent = "APPROVED";
-                                
-                                // Replace action buttons
-                                let actionsCell = row.querySelector(".action-btns");
-                                // Get student and hostel from row data
-                                let studentId = row.dataset.studentId || '';
-                                let hostelId = row.dataset.hostelId || '';
-                                actionsCell.innerHTML = 
-                                    '<a href="index.php?page=admin_applications&action=view&id=' + id + '" class="btn btn-sm btn-secondary">View</a> ' +
-                                    '<a href="index.php?page=admin_allocations&action=add&student_id=' + studentId + '&hostel_id=' + hostelId + '&app_id=' + id + '" class="btn btn-sm btn-primary">Allocate</a> ' +
-                                    '<button type="button" class="btn btn-sm btn-danger" onclick="deleteApplication(' + id + ', this)">Delete</button>';
-                            } else {
-                                alert("Error: " + response.error);
-                            }
-                        } catch (e) {
-                            alert("Server error: " + this.responseText);
-                        }
-                    }
-                };
-                
-                xhr.send("id=" + id + "&status=APPROVED");
-            });
-        }
-        
-        // Show Reject Modal
-        function showRejectModal(id) {
-            document.getElementById("rejectAppId").value = id;
-            document.getElementById("rejectReasonInput").value = "";
-            document.getElementById("rejectModal").classList.add("open");
-        }
-        
-        function closeRejectModal() {
-            document.getElementById("rejectModal").classList.remove("open");
-        }
-        
-        // Submit Reject via AJAX
-        function submitReject() {
-            let id = document.getElementById("rejectAppId").value;
-            let reason = document.getElementById("rejectReasonInput").value.trim();
-            
-            if (!reason) {
-                alert("Please provide a rejection reason.");
-                return;
-            }
-            
-            let row = document.querySelector('tr[data-id="' + id + '"]');
-            
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", "app/Controllers/Api/update_application_status.php", true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            
-            xhr.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    try {
-                        let response = JSON.parse(this.responseText);
-                        if (response.success) {
-                            closeRejectModal();
-                            
-                            // Update status badge
-                            let statusBadge = document.getElementById("status-" + id);
-                            statusBadge.className = "badge badge-danger";
-                            statusBadge.textContent = "REJECTED";
-                            
-                            // Replace action buttons
-                            let actionsCell = row.querySelector(".action-btns");
-                            actionsCell.innerHTML = 
-                                '<a href="index.php?page=admin_applications&action=view&id=' + id + '" class="btn btn-sm btn-secondary">View</a> ' +
-                                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteApplication(' + id + ', this)">🗑</button>';
-                        } else {
-                            alert("Error: " + response.error);
-                        }
-                    } catch (e) {
-                        alert("Server error: " + this.responseText);
-                    }
-                }
-            };
-            
-            xhr.send("id=" + id + "&status=REJECTED&reject_reason=" + encodeURIComponent(reason));
-        }
         
         // Table search
         document.getElementById("tableSearch")?.addEventListener("keyup", function() {

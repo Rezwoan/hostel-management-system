@@ -257,7 +257,11 @@ $page = 'admin_complaints';
                                                 <td><?php echo htmlspecialchars($complaint['created_at'] ?? ''); ?></td>
                                                 <td>
                                                     <a href="index.php?page=admin_complaints&action=view&id=<?php echo (int)$complaint['id']; ?>" class="btn btn-sm btn-secondary">View</a>
-                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteComplaint(<?php echo (int)$complaint['id']; ?>, this)">Delete</button>
+                                                    <form method="POST" action="index.php?page=admin_complaints" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this complaint?');">
+                                                        <input type="hidden" name="form_action" value="delete_complaint">
+                                                        <input type="hidden" name="id" value="<?php echo (int)$complaint['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                    </form>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -308,40 +312,6 @@ $page = 'admin_complaints';
             if (pendingAction) pendingAction();
             closeModal();
         });
-        
-        // Delete complaint via AJAX
-        function deleteComplaint(id, btn) {
-            let rowToDelete = btn.closest("tr");
-            
-            showConfirm("Delete Complaint", "Are you sure you want to delete this complaint?", function() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "app/Controllers/Api/delete_complaint.php", true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4) {
-                        if (this.status == 200) {
-                            try {
-                                let response = JSON.parse(this.responseText);
-                                if (response.success) {
-                                    rowToDelete.style.transition = "opacity 0.3s";
-                                    rowToDelete.style.opacity = "0";
-                                    setTimeout(function() { rowToDelete.remove(); }, 300);
-                                } else {
-                                    alert("Error: " + response.error);
-                                }
-                            } catch (e) {
-                                alert("Server error: " + this.responseText);
-                            }
-                        } else {
-                            alert("Request failed with status: " + this.status);
-                        }
-                    }
-                };
-                
-                xhr.send("id=" + id);
-            });
-        }
         
         // Simple table search filter
         document.getElementById("tableSearch")?.addEventListener("keyup", function() {

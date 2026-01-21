@@ -17,17 +17,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roomTypeId = (int)$_POST['room_type_id'];
         $roomNo = trim($_POST['room_no']);
         $capacity = (int)$_POST['capacity'];
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? 'ACTIVE';
         
+        // Validate inputs
         if (empty($roomNo)) {
             $error = 'Room number is required.';
+        } elseif ($floorId <= 0) {
+            $error = 'Please select a valid floor.';
+        } elseif ($roomTypeId <= 0) {
+            $error = 'Please select a valid room type.';
+        } elseif ($capacity < 1 || $capacity > 10) {
+            $error = 'Capacity must be between 1 and 10.';
+        } elseif (!in_array($status, ['ACTIVE', 'INACTIVE', 'MAINTENANCE'])) {
+            $error = 'Invalid status value.';
         } else {
             $result = createRoom($floorId, $roomTypeId, $roomNo, $capacity, $status, $actorUserId);
             if ($result) {
                 header('Location: index.php?page=admin_rooms&msg=room_created');
                 exit;
             } else {
-                $error = 'Failed to create room.';
+                $error = 'Failed to create room. Room number may already exist on this floor.';
             }
         }
     } elseif ($formAction === 'update_room') {
@@ -36,14 +45,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roomTypeId = (int)$_POST['room_type_id'];
         $roomNo = trim($_POST['room_no']);
         $capacity = (int)$_POST['capacity'];
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? 'ACTIVE';
         
-        $result = updateRoom($id, $floorId, $roomTypeId, $roomNo, $capacity, $status, $actorUserId);
-        if ($result) {
-            header('Location: index.php?page=admin_rooms&msg=room_updated');
-            exit;
+        // Validate inputs
+        if ($id <= 0) {
+            $error = 'Invalid room ID.';
+        } elseif (empty($roomNo)) {
+            $error = 'Room number is required.';
+        } elseif ($floorId <= 0) {
+            $error = 'Please select a valid floor.';
+        } elseif ($roomTypeId <= 0) {
+            $error = 'Please select a valid room type.';
+        } elseif ($capacity < 1 || $capacity > 10) {
+            $error = 'Capacity must be between 1 and 10.';
+        } elseif (!in_array($status, ['ACTIVE', 'INACTIVE', 'MAINTENANCE'])) {
+            $error = 'Invalid status value.';
         } else {
-            $error = 'Failed to update room.';
+            $result = updateRoom($id, $floorId, $roomTypeId, $roomNo, $capacity, $status, $actorUserId);
+            if ($result) {
+                header('Location: index.php?page=admin_rooms&msg=room_updated');
+                exit;
+            } else {
+                $error = 'Failed to update room. Room number may already exist on this floor.';
+            }
         }
     } elseif ($formAction === 'delete_room') {
         $id = (int)$_POST['id'];
@@ -52,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php?page=admin_rooms&msg=room_deleted');
             exit;
         } else {
-            $error = 'Failed to delete room. It may have seats or allocations.';
+            $error = 'Failed to delete room. Please delete all seats in this room first.';
         }
     }
 }
@@ -69,11 +93,13 @@ if ($action === 'view') {
 } elseif ($action === 'edit') {
     $id = (int)$_GET['id'];
     $data['room'] = getRoomById($id);
+    $data['hostels'] = getAllHostels();
     $data['floors'] = getAllFloors();
     $data['room_types'] = getAllRoomTypes();
     $pageTitle = 'Edit Room';
 } elseif ($action === 'add') {
     $pageTitle = 'Add New Room';
+    $data['hostels'] = getAllHostels();
     $data['floors'] = getAllFloors();
     $data['room_types'] = getAllRoomTypes();
 } else {

@@ -59,16 +59,10 @@ $page = 'admin_rooms';
                                 
                                 <div class="form-group">
                                     <label for="floor_id">Floor <span class="required">*</span></label>
-                                    <select id="floor_id" name="floor_id" class="form-control" required>
-                                        <option value="">Select Floor</option>
-                                        <?php if (!empty($data['floors'])): ?>
-                                            <?php foreach ($data['floors'] as $floor): ?>
-                                                <option value="<?php echo (int)$floor['id']; ?>">
-                                                    <?php echo htmlspecialchars($floor['label'] ?? 'Floor ' . $floor['floor_no']); ?> (<?php echo htmlspecialchars($floor['hostel_name'] ?? ''); ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
+                                    <select id="floor_id" name="floor_id" class="form-control" required disabled>
+                                        <option value="">Select Hostel First</option>
                                     </select>
+                                    <span class="form-hint">Select a hostel to load available floors</span>
                                 </div>
                             </div>
                             
@@ -76,6 +70,7 @@ $page = 'admin_rooms';
                                 <div class="form-group">
                                     <label for="room_no">Room Number <span class="required">*</span></label>
                                     <input type="text" id="room_no" name="room_no" class="form-control" required placeholder="e.g., 101, A-101">
+                                    <span class="form-hint">Auto-generated when floor is selected. You can modify if needed.</span>
                                 </div>
                                 
                                 <div class="form-group">
@@ -84,8 +79,8 @@ $page = 'admin_rooms';
                                         <option value="">Select Type</option>
                                         <?php if (!empty($data['room_types'])): ?>
                                             <?php foreach ($data['room_types'] as $type): ?>
-                                                <option value="<?php echo (int)$type['id']; ?>">
-                                                    <?php echo htmlspecialchars($type['name']); ?> (Capacity: <?php echo (int)$type['capacity']; ?>)
+                                                <option value="<?php echo (int)$type['id']; ?>" data-capacity="<?php echo (int)$type['default_capacity']; ?>">
+                                                    <?php echo htmlspecialchars($type['name']); ?> (Capacity: <?php echo (int)$type['default_capacity']; ?>)
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -97,14 +92,15 @@ $page = 'admin_rooms';
                                 <div class="form-group">
                                     <label for="capacity">Capacity <span class="required">*</span></label>
                                     <input type="number" id="capacity" name="capacity" class="form-control" required min="1" max="10">
+                                    <span class="form-hint">Auto-filled from room type. You can adjust if needed.</span>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="status">Status <span class="required">*</span></label>
                                     <select id="status" name="status" class="form-control" required>
-                                        <option value="AVAILABLE">Available</option>
-                                        <option value="OCCUPIED">Occupied</option>
-                                        <option value="MAINTENANCE">Under Maintenance</option>
+                                        <option value="ACTIVE" selected>Active</option>
+                                        <option value="INACTIVE">Inactive</option>
+                                        <option value="MAINTENANCE">Maintenance</option>
                                     </select>
                                 </div>
                             </div>
@@ -132,8 +128,8 @@ $page = 'admin_rooms';
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="hostel_id">Hostel <span class="required">*</span></label>
-                                    <select id="hostel_id" name="hostel_id" class="form-control" required>
+                                    <label for="edit_hostel_id">Hostel <span class="required">*</span></label>
+                                    <select id="edit_hostel_id" name="hostel_id" class="form-control" required>
                                         <?php if (!empty($data['hostels'])): ?>
                                             <?php foreach ($data['hostels'] as $hostel): ?>
                                                 <option value="<?php echo (int)$hostel['id']; ?>" <?php echo ($data['room']['hostel_id'] ?? 0) == $hostel['id'] ? 'selected' : ''; ?>>
@@ -145,11 +141,11 @@ $page = 'admin_rooms';
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="floor_id">Floor <span class="required">*</span></label>
-                                    <select id="floor_id" name="floor_id" class="form-control" required>
+                                    <label for="edit_floor_id">Floor <span class="required">*</span></label>
+                                    <select id="edit_floor_id" name="floor_id" class="form-control" required data-current-floor="<?php echo (int)($data['room']['floor_id'] ?? 0); ?>">
                                         <?php if (!empty($data['floors'])): ?>
                                             <?php foreach ($data['floors'] as $floor): ?>
-                                                <option value="<?php echo (int)$floor['id']; ?>" <?php echo ($data['room']['floor_id'] ?? 0) == $floor['id'] ? 'selected' : ''; ?>>
+                                                <option value="<?php echo (int)$floor['id']; ?>" data-hostel-id="<?php echo (int)$floor['hostel_id']; ?>" <?php echo ($data['room']['floor_id'] ?? 0) == $floor['id'] ? 'selected' : ''; ?>>
                                                     <?php echo htmlspecialchars($floor['label'] ?? 'Floor ' . $floor['floor_no']); ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -160,38 +156,40 @@ $page = 'admin_rooms';
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="room_no">Room Number <span class="required">*</span></label>
-                                    <input type="text" id="room_no" name="room_no" class="form-control" required
+                                    <label for="edit_room_no">Room Number <span class="required">*</span></label>
+                                    <input type="text" id="edit_room_no" name="room_no" class="form-control" required
                                            value="<?php echo htmlspecialchars($data['room']['room_no'] ?? ''); ?>">
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="room_type_id">Room Type <span class="required">*</span></label>
-                                    <select id="room_type_id" name="room_type_id" class="form-control" required>
+                                    <label for="edit_room_type_id">Room Type <span class="required">*</span></label>
+                                    <select id="edit_room_type_id" name="room_type_id" class="form-control" required>
                                         <?php if (!empty($data['room_types'])): ?>
                                             <?php foreach ($data['room_types'] as $type): ?>
-                                                <option value="<?php echo (int)$type['id']; ?>" <?php echo ($data['room']['room_type_id'] ?? 0) == $type['id'] ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($type['name']); ?>
+                                                <option value="<?php echo (int)$type['id']; ?>" data-capacity="<?php echo (int)$type['default_capacity']; ?>" <?php echo ($data['room']['room_type_id'] ?? 0) == $type['id'] ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($type['name']); ?> (Capacity: <?php echo (int)$type['default_capacity']; ?>)
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
+                                    <span class="form-hint">Changing room type will update capacity</span>
                                 </div>
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="capacity">Capacity <span class="required">*</span></label>
-                                    <input type="number" id="capacity" name="capacity" class="form-control" required min="1" max="10"
+                                    <label for="edit_capacity">Capacity <span class="required">*</span></label>
+                                    <input type="number" id="edit_capacity" name="capacity" class="form-control" required min="1" max="10"
                                            value="<?php echo (int)($data['room']['capacity'] ?? 1); ?>">
+                                    <span class="form-hint">Auto-filled from room type. Adjust if needed.</span>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="status">Status <span class="required">*</span></label>
-                                    <select id="status" name="status" class="form-control" required>
-                                        <option value="AVAILABLE" <?php echo ($data['room']['status'] ?? '') === 'AVAILABLE' ? 'selected' : ''; ?>>Available</option>
-                                        <option value="OCCUPIED" <?php echo ($data['room']['status'] ?? '') === 'OCCUPIED' ? 'selected' : ''; ?>>Occupied</option>
-                                        <option value="MAINTENANCE" <?php echo ($data['room']['status'] ?? '') === 'MAINTENANCE' ? 'selected' : ''; ?>>Under Maintenance</option>
+                                    <label for="edit_status">Status <span class="required">*</span></label>
+                                    <select id="edit_status" name="status" class="form-control" required>
+                                        <option value="ACTIVE" <?php echo ($data['room']['status'] ?? '') === 'ACTIVE' ? 'selected' : ''; ?>>Active</option>
+                                        <option value="INACTIVE" <?php echo ($data['room']['status'] ?? '') === 'INACTIVE' ? 'selected' : ''; ?>>Inactive</option>
+                                        <option value="MAINTENANCE" <?php echo ($data['room']['status'] ?? '') === 'MAINTENANCE' ? 'selected' : ''; ?>>Maintenance</option>
                                     </select>
                                 </div>
                             </div>
@@ -392,5 +390,178 @@ $page = 'admin_rooms';
             </div>
         </main>
     </div>
+    
+    <script>
+    // Room Management: Cascading dropdowns and auto-population
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentAction = '<?php echo $action; ?>';
+        
+        // ADD PAGE LOGIC
+        if (currentAction === 'add') {
+            const hostelSelect = document.getElementById('hostel_id');
+            const floorSelect = document.getElementById('floor_id');
+            const roomNoInput = document.getElementById('room_no');
+            const roomTypeSelect = document.getElementById('room_type_id');
+            const capacityInput = document.getElementById('capacity');
+            
+            if (hostelSelect && floorSelect && roomNoInput && roomTypeSelect && capacityInput) {
+                
+                // When hostel is selected, load its floors
+                hostelSelect.addEventListener('change', function() {
+                    const hostelId = this.value;
+                    
+                    // Reset dependent fields
+                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
+                    floorSelect.disabled = true;
+                    roomNoInput.value = '';
+                    
+                    if (hostelId) {
+                        // Fetch floors for selected hostel
+                        fetch('app/Controllers/Api/get_floors.php?hostel_id=' + hostelId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success && data.data.length > 0) {
+                                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
+                                    data.data.forEach(floor => {
+                                        const option = document.createElement('option');
+                                        option.value = floor.id;
+                                        option.textContent = (floor.label || 'Floor ' + floor.floor_no);
+                                        floorSelect.appendChild(option);
+                                    });
+                                    floorSelect.disabled = false;
+                                } else {
+                                    floorSelect.innerHTML = '<option value="">No floors available</option>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading floors:', error);
+                                floorSelect.innerHTML = '<option value="">Error loading floors</option>';
+                            });
+                    } else {
+                        floorSelect.innerHTML = '<option value="">Select Hostel First</option>';
+                    }
+                });
+                
+                // When floor is selected, generate room number
+                floorSelect.addEventListener('change', function() {
+                    const floorId = this.value;
+                    
+                    if (floorId) {
+                        roomNoInput.value = 'Loading...';
+                        roomNoInput.disabled = true;
+                        
+                        // Fetch next room number for selected floor
+                        fetch('app/Controllers/Api/get_next_room_number.php?floor_id=' + floorId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    roomNoInput.value = data.next_room_no;
+                                } else {
+                                    console.error('Error:', data.error);
+                                    roomNoInput.value = '101';
+                                }
+                                roomNoInput.disabled = false;
+                            })
+                            .catch(error => {
+                                console.error('Fetch error:', error);
+                                roomNoInput.value = '101';
+                                roomNoInput.disabled = false;
+                            });
+                    } else {
+                        roomNoInput.value = '';
+                    }
+                });
+                
+                // When room type is selected, populate capacity
+                roomTypeSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const capacity = selectedOption.getAttribute('data-capacity');
+                    
+                    if (capacity) {
+                        capacityInput.value = capacity;
+                    } else {
+                        capacityInput.value = '';
+                    }
+                });
+            }
+        }
+        
+        // EDIT PAGE LOGIC
+        if (currentAction === 'edit') {
+            const editHostelSelect = document.getElementById('edit_hostel_id');
+            const editFloorSelect = document.getElementById('edit_floor_id');
+            const editRoomTypeSelect = document.getElementById('edit_room_type_id');
+            const editCapacityInput = document.getElementById('edit_capacity');
+            
+            if (editHostelSelect && editFloorSelect && editRoomTypeSelect && editCapacityInput) {
+                
+                // Store all floor options with their hostel IDs
+                const allFloorOptions = Array.from(editFloorSelect.options).filter(opt => opt.value !== '');
+                const currentFloorId = editFloorSelect.getAttribute('data-current-floor');
+                
+                // Function to filter floors by hostel
+                function filterFloorsByHostel(hostelId) {
+                    const currentValue = editFloorSelect.value;
+                    editFloorSelect.innerHTML = '<option value="">Select Floor</option>';
+                    
+                    const filteredFloors = allFloorOptions.filter(opt => 
+                        opt.getAttribute('data-hostel-id') == hostelId
+                    );
+                    
+                    if (filteredFloors.length > 0) {
+                        filteredFloors.forEach(opt => {
+                            editFloorSelect.appendChild(opt.cloneNode(true));
+                        });
+                        
+                        // Restore previous selection if it belongs to current hostel
+                        if (currentValue && filteredFloors.some(opt => opt.value == currentValue)) {
+                            editFloorSelect.value = currentValue;
+                        }
+                    } else {
+                        editFloorSelect.innerHTML = '<option value="">No floors available for this hostel</option>';
+                    }
+                }
+                
+                // When hostel is changed in edit mode, filter floors
+                editHostelSelect.addEventListener('change', function() {
+                    const hostelId = this.value;
+                    if (hostelId) {
+                        filterFloorsByHostel(hostelId);
+                    } else {
+                        editFloorSelect.innerHTML = '<option value="">Select Hostel First</option>';
+                    }
+                });
+                
+                // When room type is changed, update capacity
+                editRoomTypeSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const capacity = selectedOption.getAttribute('data-capacity');
+                    
+                    if (capacity) {
+                        // Show confirmation before changing capacity
+                        if (editCapacityInput.value && editCapacityInput.value != capacity) {
+                            if (confirm('Changing room type will update capacity to ' + capacity + '. Continue?')) {
+                                editCapacityInput.value = capacity;
+                            } else {
+                                // Revert to previous selection
+                                const previousValue = editRoomTypeSelect.getAttribute('data-previous-value');
+                                if (previousValue) {
+                                    editRoomTypeSelect.value = previousValue;
+                                }
+                                return;
+                            }
+                        } else {
+                            editCapacityInput.value = capacity;
+                        }
+                        editRoomTypeSelect.setAttribute('data-previous-value', this.value);
+                    }
+                });
+                
+                // Store initial value for room type
+                editRoomTypeSelect.setAttribute('data-previous-value', editRoomTypeSelect.value);
+            }
+        }
+    });
+    </script>
 </body>
 </html>

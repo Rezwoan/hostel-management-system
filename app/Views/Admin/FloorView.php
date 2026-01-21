@@ -59,12 +59,13 @@ $page = 'admin_floors';
                                 <div class="form-group">
                                     <label for="floor_no">Floor Number <span class="required">*</span></label>
                                     <input type="number" id="floor_no" name="floor_no" class="form-control" required min="0">
-                                    <span class="form-hint">Use 0 for Ground Floor</span>
+                                    <span class="form-hint">Auto-filled based on hostel. You can modify if needed.</span>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="label">Floor Label</label>
                                     <input type="text" id="label" name="label" class="form-control" placeholder="e.g., Ground Floor, First Floor">
+                                    <span class="form-hint">Auto-filled. You can customize this label.</span>
                                 </div>
                             </div>
                             
@@ -270,5 +271,56 @@ $page = 'admin_floors';
             </div>
         </main>
     </div>
+    
+    <script>
+    // Auto-populate floor number and label when hostel is selected (Add Floor page)
+    document.addEventListener('DOMContentLoaded', function() {
+        const hostelSelect = document.getElementById('hostel_id');
+        const floorNoInput = document.getElementById('floor_no');
+        const labelInput = document.getElementById('label');
+        
+        // Only add listener on the add floor page
+        if (hostelSelect && floorNoInput && labelInput && '<?php echo $action; ?>' === 'add') {
+            hostelSelect.addEventListener('change', function() {
+                const hostelId = this.value;
+                
+                if (hostelId) {
+                    // Show loading state
+                    floorNoInput.value = '';
+                    labelInput.value = 'Loading...';
+                    floorNoInput.disabled = true;
+                    labelInput.disabled = true;
+                    
+                    // Fetch next floor number from API
+                    fetch('app/Controllers/Api/get_next_floor_number.php?hostel_id=' + hostelId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                floorNoInput.value = data.next_floor_no;
+                                labelInput.value = data.suggested_label;
+                            } else {
+                                console.error('Error:', data.error);
+                                floorNoInput.value = 0;
+                                labelInput.value = 'Floor 0';
+                            }
+                            floorNoInput.disabled = false;
+                            labelInput.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Fetch error:', error);
+                            floorNoInput.value = 0;
+                            labelInput.value = 'Floor 0';
+                            floorNoInput.disabled = false;
+                            labelInput.disabled = false;
+                        });
+                } else {
+                    // Clear fields if no hostel selected
+                    floorNoInput.value = '';
+                    labelInput.value = '';
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>

@@ -52,7 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Seat Management';
 $data = [];
 
-if ($action === 'edit') {
+if ($action === 'view') {
+    $id = (int)$_GET['id'];
+    $data['seat'] = getSeatById($id);
+    $pageTitle = 'View Seat';
+} elseif ($action === 'edit') {
+    $id = (int)$_GET['id'];
+    $data['seat'] = getSeatById($id);
+    $pageTitle = 'View Seat';
+} elseif ($action === 'edit') {
     $id = (int)$_GET['id'];
     $data['seat'] = getSeatById($id);
     $pageTitle = 'Edit Seat';

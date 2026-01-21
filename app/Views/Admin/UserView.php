@@ -188,40 +188,62 @@ $page = 'admin_users';
                     </div>
                     
                     <div class="detail-card">
-                        <h3>User Details</h3>
-                        <div class="detail-row">
-                            <div class="detail-label">ID</div>
-                            <div class="detail-value"><?php echo (int)$data['user']['id']; ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Name</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['user']['name'] ?? ''); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Email</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['user']['email'] ?? ''); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Phone</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['user']['phone'] ?? 'N/A'); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Role</div>
-                            <div class="detail-value">
-                                <span class="badge badge-info"><?php echo htmlspecialchars($data['user']['roles'] ?? 'No Role Assigned'); ?></span>
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h3>User Details</h3>
+                                <div class="detail-row">
+                                    <div class="detail-label">ID</div>
+                                    <div class="detail-value"><?php echo (int)$data['user']['id']; ?></div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Name</div>
+                                    <div class="detail-value"><?php echo htmlspecialchars($data['user']['name'] ?? ''); ?></div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value"><?php echo htmlspecialchars($data['user']['email'] ?? ''); ?></div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Phone</div>
+                                    <div class="detail-value"><?php echo htmlspecialchars($data['user']['phone'] ?? 'N/A'); ?></div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Role</div>
+                                    <div class="detail-value">
+                                        <span class="badge badge-info"><?php echo htmlspecialchars($data['user']['roles'] ?? 'No Role Assigned'); ?></span>
+                                    </div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Status</div>
+                                    <div class="detail-value">
+                                        <span class="badge <?php echo ($data['user']['status'] ?? '') === 'ACTIVE' ? 'badge-success' : 'badge-danger'; ?>">
+                                            <?php echo htmlspecialchars($data['user']['status'] ?? ''); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Created</div>
+                                    <div class="detail-value"><?php echo htmlspecialchars($data['user']['created_at'] ?? ''); ?></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Status</div>
-                            <div class="detail-value">
-                                <span class="badge <?php echo ($data['user']['status'] ?? '') === 'ACTIVE' ? 'badge-success' : 'badge-danger'; ?>">
-                                    <?php echo htmlspecialchars($data['user']['status'] ?? ''); ?>
-                                </span>
+                            
+                            <?php if (!empty($data['user']['profile_picture'])): ?>
+                            <div style="flex-shrink: 0;">
+                                <div style="text-align: center;">
+                                    <?php 
+                                    $imagePath = $data['user']['profile_picture'];
+                                    // If path doesn't start with public/, add it
+                                    if (strpos($imagePath, 'public/') !== 0) {
+                                        $imagePath = 'public/' . $imagePath;
+                                    }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($imagePath); ?>" 
+                                         alt="Profile Picture" 
+                                         style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; border: 3px solid #ddd;">
+                                    <p style="margin-top: 10px; font-size: 12px; color: #666;">Profile Picture</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Created</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['user']['created_at'] ?? ''); ?></div>
+                            <?php endif; ?>
                         </div>
                         
                         <?php if (!empty($data['user']['student_id'])): ?>

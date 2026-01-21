@@ -12,7 +12,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formAction = isset($_POST['form_action']) ? $_POST['form_action'] : '';
     
-    if ($formAction === 'review_application') {
+    if ($formAction === 'review_application' || $formAction === 'update_application_status') {
         $id = (int)$_POST['id'];
         $status = $_POST['status'];
         $rejectReason = isset($_POST['reject_reason']) ? trim($_POST['reject_reason']) : '';
@@ -23,6 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } else {
             $error = 'Failed to update application.';
+        }
+    } elseif ($formAction === 'revert_application') {
+        $id = (int)$_POST['id'];
+        $result = revertRoomApplicationStatus($id, $actorUserId);
+        if ($result) {
+            header('Location: index.php?page=admin_applications&action=view&id=' . $id . '&msg=application_reverted');
+            exit;
+        } else {
+            $error = 'Failed to revert application.';
         }
     } elseif ($formAction === 'delete_application') {
         $id = (int)$_POST['id'];
@@ -55,6 +64,8 @@ if (isset($_GET['msg'])) {
         $message = 'Application reviewed successfully.';
     } elseif ($_GET['msg'] === 'application_deleted') {
         $message = 'Application deleted successfully.';
+    } elseif ($_GET['msg'] === 'application_reverted') {
+        $message = 'Application status has been reverted to SUBMITTED. You can now review it again.';
     }
 }
 

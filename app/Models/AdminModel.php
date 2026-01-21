@@ -126,7 +126,7 @@ function getAllUsers() {
 function getUserById($id) {
     $conn = dbConnect();
     $sql = "SELECT u.*, GROUP_CONCAT(r.name) as roles, GROUP_CONCAT(r.id) as role_ids,
-                   sp.student_id, sp.department, sp.session_year, sp.dob, sp.address
+                   sp.student_id, sp.department, sp.session_year, sp.dob, sp.address, sp.profile_picture
             FROM users u 
             LEFT JOIN user_roles ur ON u.id = ur.user_id 
             LEFT JOIN roles r ON ur.role_id = r.id 
@@ -366,7 +366,7 @@ function getStudentsWithActiveAllocations() {
 
 function getStudentById($userId) {
     $conn = dbConnect();
-    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address 
+    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address, sp.profile_picture 
             FROM users u 
             JOIN student_profiles sp ON u.id = sp.user_id 
             WHERE u.id = $userId";
@@ -793,11 +793,19 @@ function deleteRoom($id, $actorUserId) {
 
 function getAllSeats() {
     $conn = dbConnect();
-    $sql = "SELECT s.*, r.room_no, f.floor_no, h.name as hostel_name 
+    $sql = "SELECT s.*, r.room_no, f.floor_no, h.name as hostel_name,
+                   u.name as occupant_name, u.email as occupant_email,
+                   a.id as allocation_id,
+                   CASE 
+                       WHEN a.id IS NOT NULL AND a.status = 'ACTIVE' THEN 'OCCUPIED'
+                       ELSE 'VACANT'
+                   END as actual_status
             FROM seats s 
             JOIN rooms r ON s.room_id = r.id 
             JOIN floors f ON r.floor_id = f.id 
             JOIN hostels h ON f.hostel_id = h.id 
+            LEFT JOIN allocations a ON s.id = a.seat_id AND a.status = 'ACTIVE'
+            LEFT JOIN users u ON a.student_user_id = u.id
             ORDER BY h.name, f.floor_no, r.room_no, s.seat_label";
     $result = mysqli_query($conn, $sql);
     $seats = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -816,7 +824,17 @@ function getSeatsByRoom($roomId) {
 
 function getSeatById($id) {
     $conn = dbConnect();
-    $sql = "SELECT * FROM seats WHERE id = $id";
+    $sql = "SELECT s.*, r.room_no, r.id as room_id, r.floor_id, 
+                   f.hostel_id, h.name as hostel_name,
+                   u.name as occupant_name, u.email as occupant_email,
+                   a.id as allocation_id, a.start_date, a.end_date
+            FROM seats s 
+            JOIN rooms r ON s.room_id = r.id 
+            JOIN floors f ON r.floor_id = f.id 
+            JOIN hostels h ON f.hostel_id = h.id
+            LEFT JOIN allocations a ON s.id = a.seat_id AND a.status = 'ACTIVE'
+            LEFT JOIN users u ON a.student_user_id = u.id
+            WHERE s.id = $id";
     $result = mysqli_query($conn, $sql);
     $seat = mysqli_fetch_assoc($result);
     mysqli_close($conn);
@@ -971,6 +989,37 @@ function updateRoomApplicationStatus($id, $status, $rejectReason, $reviewedByUse
             'reject_reason' => $rejectReason
         ]);
         createAuditLog($reviewedByUserId, $status, 'room_applications', $id, $meta);
+    }
+    
+    return $result;
+}
+
+function revertRoomApplicationStatus($id, $actorUserId) {
+    $conn = dbConnect();
+    
+    $oldData = getRoomApplicationById($id);
+    
+    // Only allow reverting from APPROVED or REJECTED back to SUBMITTED
+    if (!in_array($oldData['status'], ['APPROVED', 'REJECTED'])) {
+        mysqli_close($conn);
+        return false;
+    }
+    
+    // Revert to SUBMITTED status and clear rejection reason
+    $sql = "UPDATE room_applications 
+            SET status = 'SUBMITTED', reject_reason = NULL, reviewed_at = NULL, reviewed_by_manager_user_id = NULL
+            WHERE id = $id";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    
+    if ($result) {
+        $meta = json_encode([
+            'old_status' => $oldData['status'],
+            'new_status' => 'SUBMITTED',
+            'student_user_id' => $oldData['student_user_id'],
+            'action' => 'REVERTED'
+        ]);
+        createAuditLog($actorUserId, 'REVERT', 'room_applications', $id, $meta);
     }
     
     return $result;

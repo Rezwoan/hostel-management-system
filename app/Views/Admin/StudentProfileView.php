@@ -39,6 +39,9 @@ $page = 'admin_students';
                     
                     <div class="detail-card">
                         <h3>Student Details</h3>
+                        
+                        <div style="display: flex; gap: 30px; margin-bottom: 20px;">
+                            <div style="flex: 1;">
                         <div class="detail-row">
                             <div class="detail-label">User ID</div>
                             <div class="detail-value"><?php echo (int)$data['student']['id']; ?></div>
@@ -86,6 +89,26 @@ $page = 'admin_students';
                         <div class="detail-row">
                             <div class="detail-label">Registered</div>
                             <div class="detail-value"><?php echo htmlspecialchars($data['student']['created_at'] ?? ''); ?></div>
+                        </div>
+                            </div>
+                            
+                            <?php if (!empty($data['student']['profile_picture'])): ?>
+                            <div style="flex-shrink: 0;">
+                                <div style="text-align: center;">
+                                    <?php 
+                                    $imagePath = $data['student']['profile_picture'];
+                                    // If path doesn't start with public/, add it
+                                    if (strpos($imagePath, 'public/') !== 0) {
+                                        $imagePath = 'public/' . $imagePath;
+                                    }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($imagePath); ?>" 
+                                         alt="Profile Picture" 
+                                         style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; border: 3px solid #ddd;">
+                                    <p style="margin-top: 10px; font-size: 12px; color: #666;">Profile Picture</p>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-actions">

@@ -93,6 +93,7 @@ $page = 'admin_invoices';
                             <div class="form-group">
                                 <label for="amount_due">Amount Due <span class="required">*</span></label>
                                 <input type="number" id="amount_due" name="amount_due" class="form-control" required step="0.01" min="0">
+                                <small class="form-hint">Amount is automatically calculated based on the student's room type</small>
                             </div>
                             
                             <div class="form-actions">
@@ -103,12 +104,34 @@ $page = 'admin_invoices';
                     </div>
                     
                     <script>
-                        // Auto-select hostel based on student's allocation
+                        // Auto-select hostel and fetch amount due based on student's allocation
                         document.getElementById('student_user_id').addEventListener('change', function() {
                             let selectedOption = this.options[this.selectedIndex];
                             let hostelId = selectedOption.dataset.hostelId;
+                            let studentUserId = this.value;
+                            
                             if (hostelId) {
                                 document.getElementById('hostel_id').value = hostelId;
+                            }
+                            
+                            // Fetch the room fee for this student
+                            if (studentUserId) {
+                                fetch(`app/Controllers/Api/get_student_room_fee.php?student_user_id=${studentUserId}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success && data.data.default_fee) {
+                                            document.getElementById('amount_due').value = data.data.default_fee.toFixed(2);
+                                        } else {
+                                            console.error('Failed to fetch room fee:', data.error || 'Unknown error');
+                                            document.getElementById('amount_due').value = '';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching room fee:', error);
+                                        document.getElementById('amount_due').value = '';
+                                    });
+                            } else {
+                                document.getElementById('amount_due').value = '';
                             }
                         });
                     </script>

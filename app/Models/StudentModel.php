@@ -205,6 +205,7 @@ function student_create_application($studentUserId, $hostelId, $roomTypeId, $not
         return false; // Already has active application
     }
     
+    $notes = mysqli_real_escape_string($conn, $notes);
     $sql = "INSERT INTO room_applications (student_user_id, hostel_id, preferred_room_type_id, status, notes, submitted_at) 
             VALUES ($studentUserId, $hostelId, $roomTypeId, 'SUBMITTED', '$notes', NOW())";
     $result = mysqli_query($conn, $sql);
@@ -219,7 +220,10 @@ function student_create_application($studentUserId, $hostelId, $roomTypeId, $not
  */
 function student_get_applications($studentUserId) {
     $conn = dbConnect();
-    $sql = "SELECT ra.*, h.name as hostel_name, rt.name as room_type_name, rt.default_fee 
+    $sql = "SELECT DISTINCT ra.id, ra.student_user_id, ra.hostel_id, ra.preferred_room_type_id, 
+                   ra.status, ra.notes, ra.reject_reason, ra.submitted_at, ra.reviewed_at, 
+                   ra.reviewed_by_manager_user_id, ra.created_at,
+                   h.name as hostel_name, rt.name as room_type_name, rt.default_fee 
             FROM room_applications ra 
             JOIN hostels h ON ra.hostel_id = h.id 
             JOIN room_types rt ON ra.preferred_room_type_id = rt.id 

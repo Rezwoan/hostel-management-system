@@ -235,8 +235,42 @@ switch ($page) {
 
     case 'manager_dashboard':
         require_role('MANAGER');
-        // Matches: app/Controllers/Manager/ManagerController.php
-        require_once __DIR__ . '/app/Controllers/Manager/ManagerController.php';
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerDashboardController.php';
+        break;
+    
+    case 'manager_hostels':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerHostelController.php';
+        break;
+    
+    case 'manager_applications':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerApplicationController.php';
+        break;
+    
+    case 'manager_allocations':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerAllocationController.php';
+        break;
+    
+    case 'manager_complaints':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerComplaintController.php';
+        break;
+    
+    case 'manager_students':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerStudentController.php';
+        break;
+    
+    case 'manager_fees':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerFeeController.php';
+        break;
+    
+    case 'manager_notices':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerNoticeController.php';
         break;
 
     case 'student_dashboard':

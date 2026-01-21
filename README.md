@@ -35,6 +35,7 @@ A comprehensive web-based hostel management solution built with PHP and MySQL, f
 - **Complaint Submission** – Submit and track maintenance/service complaints
 - **Notice Board** – View announcements from managers and admins
 - **Profile Management** – Update personal information and profile picture
+- **Password Recovery** – Reset password using email, student ID, and date of birth verification
 
 ---
 

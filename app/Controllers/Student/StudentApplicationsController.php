@@ -19,6 +19,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formAction = $_POST['form_action'] ?? '';
     
     if ($formAction === 'create_application') {
+        // Check for duplicate submission token
+        $submittedToken = $_POST['submit_token'] ?? '';
+        $sessionToken = $_SESSION['last_submit_token'] ?? '';
+        
+        if ($submittedToken && $submittedToken === $sessionToken) {
+            // Duplicate submission detected
+            header('Location: index.php?page=student_applications&msg=duplicate');
+            exit;
+        }
+        
         $hostelId = (int)$_POST['hostel_id'];
         $roomTypeId = (int)$_POST['room_type_id'];
         $notes = $_POST['notes'] ?? '';
@@ -26,7 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = student_create_application($studentUserId, $hostelId, $roomTypeId, $notes);
         
         if ($result) {
-            $message = 'Application submitted successfully!';
+            // Save token to prevent resubmission
+            $_SESSION['last_submit_token'] = $submittedToken;
+            // Redirect to prevent form resubmission on page refresh
+            header('Location: index.php?page=student_applications&msg=application_created');
+            exit;
         } else {
             $error = 'Failed to submit application. You may already have a pending application.';
         }
@@ -35,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = student_cancel_application($applicationId, $studentUserId);
         
         if ($result) {
-            $message = 'Application cancelled successfully.';
+            // Redirect to prevent form resubmission
+            header('Location: index.php?page=student_applications&msg=application_cancelled');
+            exit;
         } else {
             $error = 'Failed to cancel application.';
         }
@@ -49,10 +65,25 @@ $applications = student_get_applications($studentUserId);
 $hostels = student_get_available_hostels();
 $roomTypes = student_get_room_types();
 
+// Generate unique form token to prevent duplicate submissions
+$formToken = bin2hex(random_bytes(16));
+
+// Handle success messages
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'application_created') {
+        $message = 'Application submitted successfully!';
+    } elseif ($_GET['msg'] === 'application_cancelled') {
+        $message = 'Application cancelled successfully.';
+    } elseif ($_GET['msg'] === 'duplicate') {
+        $error = 'This form was already submitted. Please do not submit the form multiple times.';
+    }
+}
+
 $data = [
     'applications' => $applications,
     'hostels' => $hostels,
-    'roomTypes' => $roomTypes
+    'roomTypes' => $roomTypes,
+    'formToken' => $formToken
 ];
 
 require_once __DIR__ . '/../../Views/Student/StudentApplicationsView.php';

@@ -459,6 +459,16 @@ function updateHostel($id, $name, $code, $address, $status, $actorUserId) {
 function deleteHostel($id, $actorUserId) {
     $conn = dbConnect();
     
+    // Check if hostel has any floors
+    $floorCheckSql = "SELECT COUNT(*) as floor_count FROM floors WHERE hostel_id = $id";
+    $floorCheckResult = mysqli_query($conn, $floorCheckSql);
+    $floorCheckRow = mysqli_fetch_assoc($floorCheckResult);
+    
+    if ($floorCheckRow && (int)$floorCheckRow['floor_count'] > 0) {
+        mysqli_close($conn);
+        return false; // Cannot delete hostel with floors
+    }
+    
     $hostelData = getHostelById($id);
     
     $sql = "DELETE FROM hostels WHERE id = $id";
@@ -490,6 +500,19 @@ function getAllHostelManagers() {
     return $managers;
 }
 
+function getHostelManagerById($id) {
+    $conn = dbConnect();
+    $sql = "SELECT hm.*, h.name as hostel_name, u.name as manager_name, u.email as manager_email, u.id as user_id 
+            FROM hostel_managers hm 
+            JOIN hostels h ON hm.hostel_id = h.id 
+            JOIN users u ON hm.manager_user_id = u.id 
+            WHERE hm.id = $id";
+    $result = mysqli_query($conn, $sql);
+    $manager = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return $manager;
+}
+
 function assignManagerToHostel($hostelId, $managerUserId, $actorUserId) {
     $conn = dbConnect();
     $sql = "INSERT INTO hostel_managers (hostel_id, manager_user_id) VALUES ($hostelId, $managerUserId)";
@@ -500,6 +523,28 @@ function assignManagerToHostel($hostelId, $managerUserId, $actorUserId) {
     if ($insertId) {
         $meta = json_encode(['hostel_id' => $hostelId, 'manager_user_id' => $managerUserId]);
         createAuditLog($actorUserId, 'ASSIGN_MANAGER', 'hostel_managers', $insertId, $meta);
+    }
+    
+    return $result;
+}
+
+function updateManagerAssignment($id, $hostelId, $managerUserId, $actorUserId) {
+    $conn = dbConnect();
+    
+    // Get old data before update
+    $oldDataQuery = mysqli_query($conn, "SELECT * FROM hostel_managers WHERE id = $id");
+    $oldData = mysqli_fetch_assoc($oldDataQuery);
+    
+    $sql = "UPDATE hostel_managers SET hostel_id = $hostelId, manager_user_id = $managerUserId WHERE id = $id";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    
+    if ($result && $oldData) {
+        $meta = json_encode([
+            'old' => ['hostel_id' => $oldData['hostel_id'], 'manager_user_id' => $oldData['manager_user_id']],
+            'new' => ['hostel_id' => $hostelId, 'manager_user_id' => $managerUserId]
+        ]);
+        createAuditLog($actorUserId, 'UPDATE_MANAGER_ASSIGNMENT', 'hostel_managers', $id, $meta);
     }
     
     return $result;
@@ -595,6 +640,16 @@ function updateFloor($id, $floorNo, $label, $actorUserId) {
 
 function deleteFloor($id, $actorUserId) {
     $conn = dbConnect();
+    
+    // Check if floor has any rooms
+    $roomCheckSql = "SELECT COUNT(*) as room_count FROM rooms WHERE floor_id = $id";
+    $roomCheckResult = mysqli_query($conn, $roomCheckSql);
+    $roomCheckRow = mysqli_fetch_assoc($roomCheckResult);
+    
+    if ($roomCheckRow && (int)$roomCheckRow['room_count'] > 0) {
+        mysqli_close($conn);
+        return false; // Cannot delete floor with rooms
+    }
     
     $floorData = getFloorById($id);
     
@@ -773,6 +828,16 @@ function updateRoom($id, $floorId, $roomTypeId, $roomNo, $capacity, $status, $ac
 function deleteRoom($id, $actorUserId) {
     $conn = dbConnect();
     
+    // Check if room has any seats
+    $seatCheckSql = "SELECT COUNT(*) as seat_count FROM seats WHERE room_id = $id";
+    $seatCheckResult = mysqli_query($conn, $seatCheckSql);
+    $seatCheckRow = mysqli_fetch_assoc($seatCheckResult);
+    
+    if ($seatCheckRow && (int)$seatCheckRow['seat_count'] > 0) {
+        mysqli_close($conn);
+        return false; // Cannot delete room with seats
+    }
+    
     $data = getRoomById($id);
     
     $sql = "DELETE FROM rooms WHERE id = $id";
@@ -820,6 +885,15 @@ function getSeatsByRoom($roomId) {
     $seats = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_close($conn);
     return $seats;
+}
+
+function getSeatCountByRoom($roomId) {
+    $conn = dbConnect();
+    $sql = "SELECT COUNT(*) as seat_count FROM seats WHERE room_id = $roomId";
+    $result = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_close($conn);
+    return (int)($row['seat_count'] ?? 0);
 }
 
 function getSeatById($id) {

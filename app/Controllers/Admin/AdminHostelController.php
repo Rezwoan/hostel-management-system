@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php?page=admin_hostels&msg=hostel_deleted');
             exit;
         } else {
-            $error = 'Failed to delete hostel. It may have associated data.';
+            $error = 'Failed to delete hostel. Please delete all floors in this hostel first.';
         }
     }
 }

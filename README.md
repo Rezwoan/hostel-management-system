@@ -156,7 +156,7 @@ All demo accounts use the password: `password123`
 |------|-------|----------|
 | Admin | admin1@admin.hms | password123 |
 | Manager | manager1@manager.hms | password123 |
-| Student | rahim.ahmed@student.hms | password123 |
+| Student | din@student.hms | password123 |
 
 ---
 

@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php?page=admin_floors&msg=floor_deleted');
             exit;
         } else {
-            $error = 'Failed to delete floor. It may have associated rooms.';
+            $error = 'Failed to delete floor. Please delete all rooms on this floor first.';
         }
     }
 }

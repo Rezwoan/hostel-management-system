@@ -42,34 +42,56 @@ $page = 'admin_seats';
                         <form action="index.php?page=admin_seats" method="POST">
                             <input type="hidden" name="form_action" value="create_seat">
                             
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="hostel_id">Hostel <span class="required">*</span></label>
+                                    <select id="hostel_id" name="hostel_id" class="form-control" required>
+                                        <option value="">Select Hostel</option>
+                                        <?php if (!empty($data['hostels'])): ?>
+                                            <?php foreach ($data['hostels'] as $hostel): ?>
+                                                <option value="<?php echo (int)$hostel['id']; ?>">
+                                                    <?php echo htmlspecialchars($hostel['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="floor_id">Floor <span class="required">*</span></label>
+                                    <select id="floor_id" name="floor_id" class="form-control" required disabled>
+                                        <option value="">Select Hostel First</option>
+                                    </select>
+                                    <span class="form-hint">Select a hostel to load floors</span>
+                                </div>
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="room_id">Room <span class="required">*</span></label>
-                                <select id="room_id" name="room_id" class="form-control" required>
-                                    <option value="">Select Room</option>
-                                    <?php if (!empty($data['rooms'])): ?>
-                                        <?php foreach ($data['rooms'] as $room): ?>
-                                            <option value="<?php echo (int)$room['id']; ?>">
-                                                <?php echo htmlspecialchars($room['room_no']); ?> - <?php echo htmlspecialchars($room['hostel_name'] ?? ''); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                <select id="room_id" name="room_id" class="form-control" required disabled>
+                                    <option value="">Select Floor First</option>
                                 </select>
+                                <span class="form-hint">Only rooms with available capacity are shown</span>
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="seat_no">Seat Number <span class="required">*</span></label>
-                                    <input type="text" id="seat_no" name="seat_no" class="form-control" required placeholder="e.g., A, B, 1, 2">
+                                    <label for="seat_label">Seat Label <span class="required">*</span></label>
+                                    <input type="text" id="seat_label" name="seat_label" class="form-control" required placeholder="e.g., A, B, C">
+                                    <span class="form-hint">Auto-generated when room is selected. You can modify if needed.</span>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="status">Status <span class="required">*</span></label>
                                     <select id="status" name="status" class="form-control" required>
-                                        <option value="VACANT">Vacant</option>
-                                        <option value="OCCUPIED">Occupied</option>
-                                        <option value="RESERVED">Reserved</option>
+                                        <option value="ACTIVE" selected>Active</option>
+                                        <option value="INACTIVE">Inactive</option>
                                     </select>
                                 </div>
+                            </div>
+                            
+                            <div id="capacity-info" class="alert alert-info" style="display:none; margin-bottom: 15px;">
+                                <strong>Room Capacity:</strong> <span id="capacity-text"></span>
                             </div>
                             
                             <div class="form-actions">
@@ -273,5 +295,149 @@ $page = 'admin_seats';
             </div>
         </main>
     </div>
+    
+    <script>
+    // Seat Management: Cascading dropdowns and auto-population
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentAction = '<?php echo $action; ?>';
+        
+        // ADD PAGE LOGIC
+        if (currentAction === 'add') {
+            const hostelSelect = document.getElementById('hostel_id');
+            const floorSelect = document.getElementById('floor_id');
+            const roomSelect = document.getElementById('room_id');
+            const seatLabelInput = document.getElementById('seat_label');
+            const capacityInfo = document.getElementById('capacity-info');
+            const capacityText = document.getElementById('capacity-text');
+            
+            if (hostelSelect && floorSelect && roomSelect && seatLabelInput) {
+                
+                // When hostel is selected, load its floors
+                hostelSelect.addEventListener('change', function() {
+                    const hostelId = this.value;
+                    
+                    // Reset dependent fields
+                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
+                    floorSelect.disabled = true;
+                    roomSelect.innerHTML = '<option value="">Select Floor First</option>';
+                    roomSelect.disabled = true;
+                    seatLabelInput.value = '';
+                    capacityInfo.style.display = 'none';
+                    
+                    if (hostelId) {
+                        // Fetch floors for selected hostel
+                        fetch('app/Controllers/Api/get_floors.php?hostel_id=' + hostelId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success && data.data.length > 0) {
+                                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
+                                    data.data.forEach(floor => {
+                                        const option = document.createElement('option');
+                                        option.value = floor.id;
+                                        option.textContent = (floor.label || 'Floor ' + floor.floor_no);
+                                        floorSelect.appendChild(option);
+                                    });
+                                    floorSelect.disabled = false;
+                                } else {
+                                    floorSelect.innerHTML = '<option value="">No floors available</option>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading floors:', error);
+                                floorSelect.innerHTML = '<option value="">Error loading floors</option>';
+                            });
+                    } else {
+                        floorSelect.innerHTML = '<option value="">Select Hostel First</option>';
+                    }
+                });
+                
+                // When floor is selected, load rooms with available capacity
+                floorSelect.addEventListener('change', function() {
+                    const floorId = this.value;
+                    
+                    // Reset dependent fields
+                    roomSelect.innerHTML = '<option value="">Select Room</option>';
+                    roomSelect.disabled = true;
+                    seatLabelInput.value = '';
+                    capacityInfo.style.display = 'none';
+                    
+                    if (floorId) {
+                        // Fetch rooms with available capacity for selected floor
+                        fetch('app/Controllers/Api/get_rooms_with_capacity.php?floor_id=' + floorId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success && data.rooms.length > 0) {
+                                    roomSelect.innerHTML = '<option value="">Select Room</option>';
+                                    data.rooms.forEach(room => {
+                                        const option = document.createElement('option');
+                                        option.value = room.id;
+                                        option.setAttribute('data-capacity', room.capacity);
+                                        option.setAttribute('data-seat-count', room.seat_count);
+                                        option.setAttribute('data-available', room.available_seats);
+                                        option.textContent = room.room_no + ' (Available: ' + room.available_seats + '/' + room.capacity + ')';
+                                        roomSelect.appendChild(option);
+                                    });
+                                    roomSelect.disabled = false;
+                                } else {
+                                    roomSelect.innerHTML = '<option value="">No rooms with available capacity</option>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading rooms:', error);
+                                roomSelect.innerHTML = '<option value="">Error loading rooms</option>';
+                            });
+                    } else {
+                        roomSelect.innerHTML = '<option value="">Select Floor First</option>';
+                    }
+                });
+                
+                // When room is selected, generate seat label and show capacity info
+                roomSelect.addEventListener('change', function() {
+                    const roomId = this.value;
+                    
+                    if (roomId) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const capacity = selectedOption.getAttribute('data-capacity');
+                        const seatCount = selectedOption.getAttribute('data-seat-count');
+                        const available = selectedOption.getAttribute('data-available');
+                        
+                        // Show capacity information
+                        capacityText.textContent = seatCount + ' of ' + capacity + ' seats created (' + available + ' available)';
+                        capacityInfo.style.display = 'block';
+                        
+                        // Generate next seat label
+                        seatLabelInput.value = 'Loading...';
+                        seatLabelInput.disabled = true;
+                        
+                        fetch('app/Controllers/Api/get_next_seat_label.php?room_id=' + roomId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    seatLabelInput.value = data.next_seat_label;
+                                } else {
+                                    console.error('Error:', data.error);
+                                    seatLabelInput.value = 'A';
+                                    if (data.error === 'Room is at full capacity') {
+                                        alert('This room is at full capacity. Please select another room.');
+                                        roomSelect.value = '';
+                                        capacityInfo.style.display = 'none';
+                                    }
+                                }
+                                seatLabelInput.disabled = false;
+                            })
+                            .catch(error => {
+                                console.error('Fetch error:', error);
+                                seatLabelInput.value = 'A';
+                                seatLabelInput.disabled = false;
+                            });
+                    } else {
+                        seatLabelInput.value = '';
+                        capacityInfo.style.display = 'none';
+                    }
+                });
+            }
+        }
+    });
+    </script>
 </body>
 </html>

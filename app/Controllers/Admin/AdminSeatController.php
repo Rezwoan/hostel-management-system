@@ -15,14 +15,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($formAction === 'create_seat') {
         $roomId = (int)$_POST['room_id'];
         $seatLabel = trim($_POST['seat_label']);
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? 'ACTIVE';
         
-        $result = createSeat($roomId, $seatLabel, $status, $actorUserId);
-        if ($result) {
-            header('Location: index.php?page=admin_seats&msg=seat_created');
-            exit;
+        // Validate inputs
+        if ($roomId <= 0) {
+            $error = 'Please select a valid room.';
+        } elseif (empty($seatLabel)) {
+            $error = 'Seat label is required.';
+        } elseif (!in_array($status, ['ACTIVE', 'INACTIVE'])) {
+            $error = 'Invalid status value.';
         } else {
-            $error = 'Failed to create seat.';
+            // Check if room has available capacity before creating seat
+            $room = getRoomById($roomId);
+            if (!$room) {
+                $error = 'Room not found.';
+            } else {
+                $seatCount = getSeatCountByRoom($roomId);
+                if ($seatCount >= $room['capacity']) {
+                    $error = 'Room is at full capacity. Cannot add more seats.';
+                } else {
+                    $result = createSeat($roomId, $seatLabel, $status, $actorUserId);
+                    if ($result) {
+                        header('Location: index.php?page=admin_seats&msg=seat_created');
+                        exit;
+                    } else {
+                        $error = 'Failed to create seat. Seat label may already exist in this room.';
+                    }
+                }
+            }
         }
     } elseif ($formAction === 'update_seat') {
         $id = (int)$_POST['id'];
@@ -66,6 +86,8 @@ if ($action === 'view') {
     $pageTitle = 'Edit Seat';
 } elseif ($action === 'add') {
     $pageTitle = 'Add New Seat';
+    $data['hostels'] = getAllHostels();
+    $data['floors'] = getAllFloors();
     $data['rooms'] = getAllRooms();
 } else {
     $data['seats'] = getAllSeats();

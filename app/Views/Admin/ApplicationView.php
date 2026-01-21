@@ -298,12 +298,7 @@ $page = 'admin_applications';
                                                                 <input type="hidden" name="status" value="APPROVED">
                                                                 <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                                             </form>
-                                                            <form method="POST" action="index.php?page=admin_applications" style="display:inline;" onsubmit="return confirm('Are you sure you want to reject this application?');">
-                                                                <input type="hidden" name="form_action" value="update_application_status">
-                                                                <input type="hidden" name="id" value="<?php echo (int)$app['id']; ?>">
-                                                                <input type="hidden" name="status" value="REJECTED">
-                                                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                                                            </form>
+                                                            <button type="button" class="btn btn-sm btn-danger" onclick="openRejectModal(<?php echo (int)$app['id']; ?>)">Reject</button>
                                                         <?php elseif ($status === 'APPROVED'): ?>
                                                             <a href="index.php?page=admin_allocations&action=add&student_id=<?php echo (int)$app['student_user_id']; ?>&hostel_id=<?php echo (int)$app['hostel_id']; ?>&app_id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-primary">Allocate</a>
                                                         <?php endif; ?>
@@ -331,7 +326,7 @@ $page = 'admin_applications';
     </div>
     
     <!-- Custom Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay">
+    <div id="confirmModal" class="modal-overlay" style="display:none;">
         <div class="modal-box">
             <h3 id="confirmTitle">Confirm Action</h3>
             <p id="confirmMessage">Are you sure?</p>
@@ -343,20 +338,53 @@ $page = 'admin_applications';
     </div>
     
     <!-- Reject Modal with Reason -->
-    <div id="rejectModal" class="modal-overlay">
+    <div id="rejectModal" class="modal-overlay" style="display:none;">
         <div class="modal-box">
             <h3>Reject Application</h3>
             <p>Please provide a reason for rejection:</p>
-            <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="Enter rejection reason..."></textarea>
-            <input type="hidden" id="rejectAppId" value="">
-            <div class="modal-actions" style="margin-top: 15px;">
-                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="submitReject()">Reject Application</button>
-            </div>
+            <form id="rejectForm" method="POST" action="index.php?page=admin_applications">
+                <input type="hidden" name="form_action" value="update_application_status">
+                <input type="hidden" name="id" id="rejectAppId" value="">
+                <input type="hidden" name="status" value="REJECTED">
+                <textarea name="reject_reason" id="rejectReasonInput" class="form-control" rows="3" placeholder="Enter rejection reason..." required></textarea>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Application</button>
+                </div>
+            </form>
         </div>
     </div>
     
     <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .modal-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
         .inline-status-select {
             padding: 4px 8px;
             border-radius: 4px;
@@ -374,18 +402,37 @@ $page = 'admin_applications';
             let confirmBtn = document.getElementById("confirmBtn");
             confirmBtn.textContent = btnText || "Confirm";
             confirmBtn.className = "btn " + (btnClass || "btn-success");
-            document.getElementById("confirmModal").classList.add("open");
+            document.getElementById("confirmModal").style.display = "flex";
             pendingAction = callback;
         }
         
         function closeModal() {
-            document.getElementById("confirmModal").classList.remove("open");
+            document.getElementById("confirmModal").style.display = "none";
             pendingAction = null;
         }
         
         document.getElementById("confirmBtn").addEventListener("click", function() {
             if (pendingAction) pendingAction();
             closeModal();
+        });
+        
+        function openRejectModal(appId) {
+            document.getElementById('rejectAppId').value = appId;
+            document.getElementById('rejectReasonInput').value = '';
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+            document.getElementById('rejectReasonInput').value = '';
+            document.getElementById('rejectAppId').value = '';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
         });
         
         // Table search

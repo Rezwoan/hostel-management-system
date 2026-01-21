@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_close($conn);
             
             if ($result) {
-                $message = 'Complaint submitted successfully!';
-                $action = 'list';
+                header('Location: index.php?page=student_complaints&msg=complaint_created');
+                exit;
             } else {
                 $error = 'Failed to submit complaint.';
             }
@@ -51,10 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = student_add_complaint_message($complaintId, $studentUserId, $messageText);
         
         if ($result) {
-            $message = 'Message added successfully.';
+            header('Location: index.php?page=student_complaints&action=view&id=' . $complaintId . '&msg=message_added');
+            exit;
         } else {
             $error = 'Failed to add message.';
         }
+    }
+}
+
+// Handle success messages
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'complaint_created') {
+        $message = 'Complaint submitted successfully!';
+    } elseif ($_GET['msg'] === 'message_added') {
+        $message = 'Message added successfully.';
     }
 }
 

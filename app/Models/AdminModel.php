@@ -793,11 +793,19 @@ function deleteRoom($id, $actorUserId) {
 
 function getAllSeats() {
     $conn = dbConnect();
-    $sql = "SELECT s.*, r.room_no, f.floor_no, h.name as hostel_name 
+    $sql = "SELECT s.*, r.room_no, f.floor_no, h.name as hostel_name,
+                   u.name as occupant_name, u.email as occupant_email,
+                   a.id as allocation_id,
+                   CASE 
+                       WHEN a.id IS NOT NULL AND a.status = 'ACTIVE' THEN 'OCCUPIED'
+                       ELSE 'VACANT'
+                   END as actual_status
             FROM seats s 
             JOIN rooms r ON s.room_id = r.id 
             JOIN floors f ON r.floor_id = f.id 
             JOIN hostels h ON f.hostel_id = h.id 
+            LEFT JOIN allocations a ON s.id = a.seat_id AND a.status = 'ACTIVE'
+            LEFT JOIN users u ON a.student_user_id = u.id
             ORDER BY h.name, f.floor_no, r.room_no, s.seat_label";
     $result = mysqli_query($conn, $sql);
     $seats = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -816,7 +824,17 @@ function getSeatsByRoom($roomId) {
 
 function getSeatById($id) {
     $conn = dbConnect();
-    $sql = "SELECT * FROM seats WHERE id = $id";
+    $sql = "SELECT s.*, r.room_no, r.id as room_id, r.floor_id, 
+                   f.hostel_id, h.name as hostel_name,
+                   u.name as occupant_name, u.email as occupant_email,
+                   a.id as allocation_id, a.start_date, a.end_date
+            FROM seats s 
+            JOIN rooms r ON s.room_id = r.id 
+            JOIN floors f ON r.floor_id = f.id 
+            JOIN hostels h ON f.hostel_id = h.id
+            LEFT JOIN allocations a ON s.id = a.seat_id AND a.status = 'ACTIVE'
+            LEFT JOIN users u ON a.student_user_id = u.id
+            WHERE s.id = $id";
     $result = mysqli_query($conn, $sql);
     $seat = mysqli_fetch_assoc($result);
     mysqli_close($conn);

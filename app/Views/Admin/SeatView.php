@@ -236,12 +236,14 @@ $page = 'admin_seats';
                                                 <td><?php echo htmlspecialchars($seat['hostel_name'] ?? ''); ?></td>
                                                 <td>
                                                     <?php 
-                                                    $statusClass = 'badge-warning';
-                                                    if ($seat['status'] === 'VACANT') $statusClass = 'badge-success';
-                                                    elseif ($seat['status'] === 'OCCUPIED') $statusClass = 'badge-danger';
+                                                    $actualStatus = $seat['actual_status'] ?? 'VACANT';
+                                                    $statusClass = 'badge-success';
+                                                    if ($actualStatus === 'OCCUPIED') {
+                                                        $statusClass = 'badge-danger';
+                                                    }
                                                     ?>
                                                     <span class="badge <?php echo $statusClass; ?>">
-                                                        <?php echo htmlspecialchars($seat['status']); ?>
+                                                        <?php echo htmlspecialchars($actualStatus); ?>
                                                     </span>
                                                 </td>
                                                 <td><?php echo htmlspecialchars($seat['occupant_name'] ?? 'N/A'); ?></td>

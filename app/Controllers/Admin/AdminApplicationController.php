@@ -12,7 +12,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formAction = isset($_POST['form_action']) ? $_POST['form_action'] : '';
     
-    if ($formAction === 'review_application') {
+    if ($formAction === 'review_application' || $formAction === 'update_application_status') {
         $id = (int)$_POST['id'];
         $status = $_POST['status'];
         $rejectReason = isset($_POST['reject_reason']) ? trim($_POST['reject_reason']) : '';

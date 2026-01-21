@@ -114,7 +114,17 @@ $page = 'admin_applications';
                     
                     <script>
                         function submitReview(status) {
-                            document.getElementById("reviewStatus").value = status;
+                            console.log('submitReview called with status:', status);
+                            
+                            const statusField = document.getElementById("reviewStatus");
+                            if (!statusField) {
+                                alert('Error: Status field not found');
+                                return;
+                            }
+                            
+                            statusField.value = status;
+                            console.log('Status field set to:', statusField.value);
+                            
                             if (status === 'REJECTED') {
                                 let reason = document.getElementById("reject_reason").value.trim();
                                 if (!reason) {
@@ -122,12 +132,21 @@ $page = 'admin_applications';
                                     return;
                                 }
                             }
+                            
                             if (status === 'APPROVED') {
                                 if (!confirm('Are you sure you want to APPROVE this application? You can revert this later if needed.')) {
                                     return;
                                 }
                             }
-                            document.getElementById("reviewForm").submit();
+                            
+                            const form = document.getElementById("reviewForm");
+                            if (!form) {
+                                alert('Error: Form not found');
+                                return;
+                            }
+                            
+                            console.log('Submitting form...');
+                            form.submit();
                         }
                         
                         function showRejectForm() {

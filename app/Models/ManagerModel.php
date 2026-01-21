@@ -748,8 +748,11 @@ function manager_get_hostel_notices($managerUserId) {
 
 function manager_create_hostel_notice($hostelId, $title, $body, $status, $publishAt, $expireAt, $managerUserId) {
     $conn = dbConnect();
-    $publishAtStr = $publishAt ? "'$publishAt'" : 'NULL';
-    $expireAtStr = $expireAt ? "'$expireAt'" : 'NULL';
+    $title = mysqli_real_escape_string($conn, $title);
+    $body = mysqli_real_escape_string($conn, $body);
+    $status = mysqli_real_escape_string($conn, $status);
+    $publishAtStr = $publishAt ? "'" . mysqli_real_escape_string($conn, $publishAt) . "'" : 'NULL';
+    $expireAtStr = $expireAt ? "'" . mysqli_real_escape_string($conn, $expireAt) . "'" : 'NULL';
     
     $sql = "INSERT INTO notices (scope, hostel_id, title, body, status, publish_at, expire_at, created_by_user_id) 
             VALUES ('HOSTEL', $hostelId, '$title', '$body', '$status', $publishAtStr, $expireAtStr, $managerUserId)";
@@ -766,8 +769,11 @@ function manager_create_hostel_notice($hostelId, $title, $body, $status, $publis
 
 function manager_update_notice($noticeId, $title, $body, $status, $publishAt, $expireAt, $managerUserId) {
     $conn = dbConnect();
-    $publishAtStr = $publishAt ? "'$publishAt'" : 'NULL';
-    $expireAtStr = $expireAt ? "'$expireAt'" : 'NULL';
+    $title = mysqli_real_escape_string($conn, $title);
+    $body = mysqli_real_escape_string($conn, $body);
+    $status = mysqli_real_escape_string($conn, $status);
+    $publishAtStr = $publishAt ? "'" . mysqli_real_escape_string($conn, $publishAt) . "'" : 'NULL';
+    $expireAtStr = $expireAt ? "'" . mysqli_real_escape_string($conn, $expireAt) . "'" : 'NULL';
     
     $sql = "UPDATE notices 
             SET title = '$title', body = '$body', status = '$status', 

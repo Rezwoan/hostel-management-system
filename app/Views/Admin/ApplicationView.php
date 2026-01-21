@@ -114,7 +114,17 @@ $page = 'admin_applications';
                     
                     <script>
                         function submitReview(status) {
-                            document.getElementById("reviewStatus").value = status;
+                            console.log('submitReview called with status:', status);
+                            
+                            const statusField = document.getElementById("reviewStatus");
+                            if (!statusField) {
+                                alert('Error: Status field not found');
+                                return;
+                            }
+                            
+                            statusField.value = status;
+                            console.log('Status field set to:', statusField.value);
+                            
                             if (status === 'REJECTED') {
                                 let reason = document.getElementById("reject_reason").value.trim();
                                 if (!reason) {
@@ -122,7 +132,21 @@ $page = 'admin_applications';
                                     return;
                                 }
                             }
-                            document.getElementById("reviewForm").submit();
+                            
+                            if (status === 'APPROVED') {
+                                if (!confirm('Are you sure you want to APPROVE this application? You can revert this later if needed.')) {
+                                    return;
+                                }
+                            }
+                            
+                            const form = document.getElementById("reviewForm");
+                            if (!form) {
+                                alert('Error: Form not found');
+                                return;
+                            }
+                            
+                            console.log('Submitting form...');
+                            form.submit();
                         }
                         
                         function showRejectForm() {
@@ -142,6 +166,24 @@ $page = 'admin_applications';
                                 '<a href="index.php?page=admin_applications" class="btn btn-secondary">Back to List</a>';
                         }
                     </script>
+                    <?php elseif (in_array($appStatus, ['APPROVED', 'REJECTED'])): ?>
+                    <!-- Revert option for already reviewed applications -->
+                    <div class="alert alert-info" style="margin-bottom: 15px;">
+                        <strong>Note:</strong> This application has already been <?php echo strtolower($appStatus); ?>. 
+                        If this was done by mistake, you can revert it back to SUBMITTED status for review.
+                    </div>
+                    <div class="form-card">
+                        <h3>Revert Application Status</h3>
+                        <form action="index.php?page=admin_applications" method="POST" onsubmit="return confirm('Are you sure you want to revert this application back to SUBMITTED status? This will allow you to review it again.')">
+                            <input type="hidden" name="form_action" value="revert_application">
+                            <input type="hidden" name="id" value="<?php echo (int)$data['application']['id']; ?>">
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-warning">Revert to SUBMITTED</button>
+                                <a href="index.php?page=admin_applications" class="btn btn-secondary">Back to List</a>
+                            </div>
+                        </form>
+                    </div>
                     <?php else: ?>
                     <div class="form-actions">
                         <a href="index.php?page=admin_applications" class="btn btn-secondary">Back to List</a>

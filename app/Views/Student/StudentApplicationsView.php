@@ -61,13 +61,29 @@ $page = 'student_applications';
                                                 <?php 
                                                 $status = $app['status'] ?? '';
                                                 $statusClass = 'badge-secondary';
-                                                if ($status === 'APPROVED') $statusClass = 'badge-success';
-                                                elseif ($status === 'REJECTED') $statusClass = 'badge-danger';
-                                                elseif ($status === 'SUBMITTED') $statusClass = 'badge-warning';
-                                                elseif ($status === 'CANCELLED') $statusClass = 'badge-secondary';
+                                                $statusText = $status;
+                                                $statusTitle = '';
+                                                
+                                                if ($status === 'APPROVED') {
+                                                    $statusClass = 'badge-success';
+                                                    $statusTitle = 'Your application has been approved';
+                                                } elseif ($status === 'REJECTED') {
+                                                    $statusClass = 'badge-danger';
+                                                    $statusTitle = 'Your application was rejected';
+                                                } elseif ($status === 'SUBMITTED') {
+                                                    $statusClass = 'badge-warning';
+                                                    $statusText = 'PENDING';
+                                                    $statusTitle = 'Your application is under review';
+                                                } elseif ($status === 'CANCELLED') {
+                                                    $statusClass = 'badge-secondary';
+                                                    $statusTitle = 'You cancelled this application';
+                                                } elseif ($status === 'DRAFT') {
+                                                    $statusClass = 'badge-secondary';
+                                                    $statusTitle = 'Application not yet submitted';
+                                                }
                                                 ?>
-                                                <span class="badge <?php echo $statusClass; ?>">
-                                                    <?php echo htmlspecialchars($status); ?>
+                                                <span class="badge <?php echo $statusClass; ?>" title="<?php echo htmlspecialchars($statusTitle); ?>">
+                                                    <?php echo htmlspecialchars($statusText); ?>
                                                 </span>
                                             </td>
                                             <td><?php echo htmlspecialchars(substr($app['notes'] ?? '', 0, 50)) . (strlen($app['notes'] ?? '') > 50 ? '...' : ''); ?></td>
@@ -113,8 +129,9 @@ $page = 'student_applications';
                             You already have a pending or approved application. Please wait for it to be processed or cancel it before submitting a new one.
                         </div>
                     <?php else: ?>
-                        <form action="index.php?page=student_applications" method="POST">
+                        <form action="index.php?page=student_applications" method="POST" id="applicationForm" onsubmit="return handleFormSubmit(this)">
                             <input type="hidden" name="form_action" value="create_application">
+                            <input type="hidden" name="submit_token" value="<?php echo htmlspecialchars($data['formToken']); ?>">
                             
                             <div class="form-row">
                                 <div class="form-group">
@@ -148,9 +165,27 @@ $page = 'student_applications';
                             </div>
                             
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Submit Application</button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
                             </div>
                         </form>
+                        
+                        <script>
+                        let formSubmitted = false;
+                        
+                        function handleFormSubmit(form) {
+                            if (formSubmitted) {
+                                alert('Form is already being submitted. Please wait.');
+                                return false;
+                            }
+                            
+                            formSubmitted = true;
+                            const submitBtn = document.getElementById('submitBtn');
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Submitting...';
+                            
+                            return true;
+                        }
+                        </script>
                     <?php endif; ?>
                 </div>
             </div>

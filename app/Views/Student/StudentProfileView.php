@@ -42,8 +42,22 @@ $page = 'student_profile';
                         <div class="detail-row">
                             <div class="detail-label">Profile Picture</div>
                             <div class="detail-value">
-                                <img src="public/<?php echo htmlspecialchars($data['profile']['profile_picture'] ?? 'uploads/profile_pictures/default.png'); ?>?v=<?php echo time(); ?>" 
+                                <?php 
+                                $profilePic = $data['profile']['profile_picture'] ?? null;
+                                
+                                // If profile picture is null or empty, use default
+                                if (empty($profilePic)) {
+                                    $profilePic = 'uploads/profile_pictures/default.png';
+                                }
+                                
+                                // If path doesn't start with public/, add it
+                                if (strpos($profilePic, 'public/') !== 0) {
+                                    $profilePic = 'public/' . $profilePic;
+                                }
+                                ?>
+                                <img src="<?php echo htmlspecialchars($profilePic); ?>?v=<?php echo time(); ?>" 
                                      alt="Profile Picture" 
+                                     onerror="this.src='public/uploads/profile_pictures/default.png';"
                                      style="width: 150px; height: 150px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd;">
                             </div>
                         </div>

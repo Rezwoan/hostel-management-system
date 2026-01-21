@@ -34,11 +34,11 @@ $page = 'student_fees';
                         $pendingCount++;
                     }
                 }
-                $totalPending = $totalDue - $totalPaid;
+                $totalBalance = $totalDue - $totalPaid;
                 ?>
                 <div class="stats-grid stats-grid-3" style="margin-bottom: 30px;">
                     <div class="stat-card stat-card-info">
-                        <h3>Total Due</h3>
+                        <h3>Total Amount</h3>
                         <div class="stat-value">$<?php echo number_format($totalDue, 2); ?></div>
                         <div class="stat-label">All invoices</div>
                     </div>
@@ -48,9 +48,9 @@ $page = 'student_fees';
                         <div class="stat-label">Payments made</div>
                     </div>
                     <div class="stat-card stat-card-warning">
-                        <h3>Pending</h3>
-                        <div class="stat-value">$<?php echo number_format($totalPending, 2); ?></div>
-                        <div class="stat-label"><?php echo $pendingCount; ?> invoice(s)</div>
+                        <h3>Balance Due</h3>
+                        <div class="stat-value">$<?php echo number_format($totalBalance, 2); ?></div>
+                        <div class="stat-label"><?php echo $pendingCount; ?> pending invoice(s)</div>
                     </div>
                 </div>
                 

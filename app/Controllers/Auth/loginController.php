@@ -52,6 +52,13 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
 }
 
 $error_msg = "";
+$success_msg = "";
+
+// Check for password reset success message
+if (isset($_SESSION['login_success_msg'])) {
+    $success_msg = $_SESSION['login_success_msg'];
+    unset($_SESSION['login_success_msg']);
+}
 
 // 2. Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

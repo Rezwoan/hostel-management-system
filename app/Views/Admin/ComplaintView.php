@@ -10,6 +10,7 @@ $page = 'admin_complaints';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Admin/css/common.css">
     <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
@@ -237,38 +238,7 @@ $page = 'admin_complaints';
         </div>
     </div>
     
-    <script>
-        let pendingAction = null;
-        let pendingRow = null;
-        
-        function showConfirm(title, message, callback) {
-            document.getElementById("confirmTitle").textContent = title;
-            document.getElementById("confirmMessage").textContent = message;
-            document.getElementById("confirmModal").classList.add("open");
-            pendingAction = callback;
-        }
-        
-        function closeModal() {
-            document.getElementById("confirmModal").classList.remove("open");
-            pendingAction = null;
-            pendingRow = null;
-        }
-        
-        document.getElementById("confirmBtn").addEventListener("click", function() {
-            if (pendingAction) pendingAction();
-            closeModal();
-        });
-        
-        // Simple table search filter
-        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#complaintsTableBody tr");
-            
-            rows.forEach(function(row) {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
-        });
-    </script>
+    <script src="app/Views/Admin/js/common.js"></script>
+    <script src="app/Views/Admin/js/ComplaintView.js"></script>
 </body>
 </html>

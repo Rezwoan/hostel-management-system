@@ -10,6 +10,8 @@ $page = 'manager_fees';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Manager</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Manager/css/common.css">
+    <link rel="stylesheet" href="app/Views/Manager/css/ManagerFeeView.css">
     <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
@@ -101,39 +103,6 @@ $page = 'manager_fees';
                             </div>
                         </form>
                     </div>
-                    
-                    <script>
-                        // Auto-select hostel and fetch amount due based on student's allocation
-                        document.getElementById('student_user_id').addEventListener('change', function() {
-                            let selectedOption = this.options[this.selectedIndex];
-                            let hostelId = selectedOption.dataset.hostelId;
-                            let studentUserId = this.value;
-                            
-                            if (hostelId) {
-                                document.getElementById('hostel_id').value = hostelId;
-                            }
-                            
-                            // Fetch the room fee for this student
-                            if (studentUserId) {
-                                fetch(`app/Controllers/Api/get_student_room_fee.php?student_user_id=${studentUserId}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success && data.data.default_fee) {
-                                            document.getElementById('amount_due').value = data.data.default_fee.toFixed(2);
-                                        } else {
-                                            console.error('Failed to fetch room fee:', data.error || 'Unknown error');
-                                            document.getElementById('amount_due').value = '';
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error fetching room fee:', error);
-                                        document.getElementById('amount_due').value = '';
-                                    });
-                            } else {
-                                document.getElementById('amount_due').value = '';
-                            }
-                        });
-                    </script>
                     
                 <?php elseif ($action === 'edit' && isset($data['invoice'])): ?>
                     <!-- Edit Invoice Form -->
@@ -467,59 +436,7 @@ $page = 'manager_fees';
         </div>
     </div>
     
-    <style>
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-box {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-        .modal-box h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-    </style>
-    
-    <script>
-        let pendingAction = null;
-        let pendingRow = null;
-        
-        function showConfirm(title, message, callback) {
-            document.getElementById("confirmTitle").textContent = title;
-            document.getElementById("confirmMessage").textContent = message;
-            document.getElementById("confirmModal").style.display = "flex";
-            pendingAction = callback;
-        }
-        
-        function closeModal() {
-            document.getElementById("confirmModal").style.display = "none";
-            pendingAction = null;
-            pendingRow = null;
-        }
-        
-        document.getElementById("confirmBtn").addEventListener("click", function() {
-            if (pendingAction) pendingAction();
-            closeModal();
-        });
-    </script>
+    <script src="app/Views/Manager/js/common.js"></script>
+    <script src="app/Views/Manager/js/ManagerFeeView.js"></script>
 </body>
 </html>

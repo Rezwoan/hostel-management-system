@@ -10,6 +10,7 @@ $page = 'manager_hostels';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Manager</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Manager/css/ManagerHostelView.css">
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -159,56 +160,6 @@ $page = 'manager_hostels';
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                        
-                        <style>
-                            .hostel-cards {
-                                display: grid;
-                                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-                                gap: 20px;
-                                margin-top: 20px;
-                            }
-                            .hostel-card {
-                                background: white;
-                                border: 1px solid #ddd;
-                                border-radius: 8px;
-                                padding: 20px;
-                                transition: box-shadow 0.3s;
-                            }
-                            .hostel-card:hover {
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                            }
-                            .hostel-card-header {
-                                border-bottom: 2px solid #f0f0f0;
-                                padding-bottom: 15px;
-                                margin-bottom: 15px;
-                            }
-                            .hostel-card-header h3 {
-                                margin: 0 0 8px 0;
-                                font-size: 1.3rem;
-                                color: #333;
-                            }
-                            .hostel-code {
-                                background: #e8f4f8;
-                                padding: 4px 10px;
-                                border-radius: 4px;
-                                font-size: 0.85rem;
-                                font-weight: 600;
-                                color: #0066cc;
-                            }
-                            .hostel-card-body {
-                                margin-bottom: 15px;
-                            }
-                            .hostel-address {
-                                margin: 10px 0 0 0;
-                                color: #666;
-                                font-size: 0.9rem;
-                            }
-                            .hostel-card-footer {
-                                display: flex;
-                                gap: 10px;
-                                flex-wrap: wrap;
-                            }
-                        </style>
                     <?php else: ?>
                         <div class="alert alert-info">
                             You are not currently assigned to manage any hostels. Please contact the administrator.

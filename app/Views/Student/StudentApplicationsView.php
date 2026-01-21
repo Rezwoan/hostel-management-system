@@ -10,6 +10,7 @@ $page = 'student_applications';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Student</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="app/Views/Student/js/StudentApplicationsView.js"></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -167,24 +168,6 @@ $page = 'student_applications';
                                 <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
                             </div>
                         </form>
-                        
-                        <script>
-                        let formSubmitted = false;
-                        
-                        function handleFormSubmit(form) {
-                            if (formSubmitted) {
-                                alert('Form is already being submitted. Please wait.');
-                                return false;
-                            }
-                            
-                            formSubmitted = true;
-                            const submitBtn = document.getElementById('submitBtn');
-                            submitBtn.disabled = true;
-                            submitBtn.textContent = 'Submitting...';
-                            
-                            return true;
-                        }
-                        </script>
                     <?php endif; ?>
                 </div>
             </div>

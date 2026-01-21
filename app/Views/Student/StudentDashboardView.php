@@ -10,6 +10,7 @@ $page = 'student_dashboard';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Student</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Student/css/StudentDashboardView.css">
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -170,17 +171,5 @@ $page = 'student_dashboard';
             </div>
         </main>
     </div>
-    
-    <style>
-    .action-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .btn-block {
-        width: 100%;
-        text-align: center;
-    }
-    </style>
 </body>
 </html>

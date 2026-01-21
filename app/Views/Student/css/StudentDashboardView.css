@@ -1,0 +1,12 @@
+/* Student Dashboard View CSS */
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: center;
+}

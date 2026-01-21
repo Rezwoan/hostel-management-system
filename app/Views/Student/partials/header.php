@@ -51,8 +51,4 @@ elseif ($currentPage === 'student_profile') $activeSection = 'profile';
     </nav>
 </div>
 
-<script>
-function toggleMobileMenu() {
-    document.getElementById('mobileMenu').classList.toggle('open');
-}
-</script>
+<script src="app/Views/Student/js/header.js"></script>

@@ -353,9 +353,5 @@ $page = 'admin_users';
             </div>
         </main>
     </div>
-    
-    <script>
-        // No AJAX functionality - all actions use traditional form submissions
-    </script>
 </body>
 </html>

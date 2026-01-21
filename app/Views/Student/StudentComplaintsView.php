@@ -10,6 +10,7 @@ $page = 'student_complaints';
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Student</title>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Student/css/StudentComplaintsView.css">
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -169,43 +170,5 @@ $page = 'student_complaints';
             </div>
         </main>
     </div>
-    
-    <style>
-    .complaint-thread {
-        padding: 20px;
-    }
-    .message-item {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
-    }
-    .message-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #dee2e6;
-    }
-    .message-time {
-        color: #6c757d;
-        font-size: 0.9em;
-    }
-    .message-body {
-        line-height: 1.6;
-    }
-    .breadcrumb {
-        margin-bottom: 20px;
-        font-size: 14px;
-    }
-    .breadcrumb a {
-        color: #007bff;
-        text-decoration: none;
-    }
-    .breadcrumb span {
-        margin: 0 8px;
-        color: #6c757d;
-    }
-    </style>
 </body>
 </html>

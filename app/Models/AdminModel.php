@@ -976,6 +976,37 @@ function updateRoomApplicationStatus($id, $status, $rejectReason, $reviewedByUse
     return $result;
 }
 
+function revertRoomApplicationStatus($id, $actorUserId) {
+    $conn = dbConnect();
+    
+    $oldData = getRoomApplicationById($id);
+    
+    // Only allow reverting from APPROVED or REJECTED back to SUBMITTED
+    if (!in_array($oldData['status'], ['APPROVED', 'REJECTED'])) {
+        mysqli_close($conn);
+        return false;
+    }
+    
+    // Revert to SUBMITTED status and clear rejection reason
+    $sql = "UPDATE room_applications 
+            SET status = 'SUBMITTED', reject_reason = NULL, reviewed_at = NULL, reviewed_by_manager_user_id = NULL
+            WHERE id = $id";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    
+    if ($result) {
+        $meta = json_encode([
+            'old_status' => $oldData['status'],
+            'new_status' => 'SUBMITTED',
+            'student_user_id' => $oldData['student_user_id'],
+            'action' => 'REVERTED'
+        ]);
+        createAuditLog($actorUserId, 'REVERT', 'room_applications', $id, $meta);
+    }
+    
+    return $result;
+}
+
 function deleteRoomApplication($id, $actorUserId) {
     $conn = dbConnect();
     

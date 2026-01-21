@@ -61,13 +61,29 @@ $page = 'student_applications';
                                                 <?php 
                                                 $status = $app['status'] ?? '';
                                                 $statusClass = 'badge-secondary';
-                                                if ($status === 'APPROVED') $statusClass = 'badge-success';
-                                                elseif ($status === 'REJECTED') $statusClass = 'badge-danger';
-                                                elseif ($status === 'SUBMITTED') $statusClass = 'badge-warning';
-                                                elseif ($status === 'CANCELLED') $statusClass = 'badge-secondary';
+                                                $statusText = $status;
+                                                $statusTitle = '';
+                                                
+                                                if ($status === 'APPROVED') {
+                                                    $statusClass = 'badge-success';
+                                                    $statusTitle = 'Your application has been approved';
+                                                } elseif ($status === 'REJECTED') {
+                                                    $statusClass = 'badge-danger';
+                                                    $statusTitle = 'Your application was rejected';
+                                                } elseif ($status === 'SUBMITTED') {
+                                                    $statusClass = 'badge-warning';
+                                                    $statusText = 'PENDING';
+                                                    $statusTitle = 'Your application is under review';
+                                                } elseif ($status === 'CANCELLED') {
+                                                    $statusClass = 'badge-secondary';
+                                                    $statusTitle = 'You cancelled this application';
+                                                } elseif ($status === 'DRAFT') {
+                                                    $statusClass = 'badge-secondary';
+                                                    $statusTitle = 'Application not yet submitted';
+                                                }
                                                 ?>
-                                                <span class="badge <?php echo $statusClass; ?>">
-                                                    <?php echo htmlspecialchars($status); ?>
+                                                <span class="badge <?php echo $statusClass; ?>" title="<?php echo htmlspecialchars($statusTitle); ?>">
+                                                    <?php echo htmlspecialchars($statusText); ?>
                                                 </span>
                                             </td>
                                             <td><?php echo htmlspecialchars(substr($app['notes'] ?? '', 0, 50)) . (strlen($app['notes'] ?? '') > 50 ? '...' : ''); ?></td>

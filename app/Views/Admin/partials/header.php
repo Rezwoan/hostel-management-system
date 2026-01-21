@@ -144,10 +144,6 @@ function toggleMobileSubmenu(btn) {
     const submenu = btn.nextElementSibling;
     const isOpen = submenu.classList.contains('open');
     
-    // Close all other submenus (optional - for accordion behavior)
-    // document.querySelectorAll('.mobile-submenu.open').forEach(s => s.classList.remove('open'));
-    // document.querySelectorAll('.mobile-nav-toggle').forEach(b => b.classList.remove('expanded'));
-    
     // Toggle current submenu
     submenu.classList.toggle('open');
     btn.classList.toggle('expanded');

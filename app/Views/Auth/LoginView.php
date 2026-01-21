@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Hostel Management System</title>
-    <?php 
-    $pageTitle = 'Login';
-    $pageDescription = 'Sign in to access your Hostel Management System dashboard. Manage room allocations, payments, and more.';
-    include __DIR__ . '/../partials/meta.php'; 
-    ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Auth/css/LoginView.css">
 </head>

@@ -30,6 +30,8 @@ $page = 'manager_students';
                     
                     <div class="detail-card" style="margin-bottom: 20px;">
                         <h3>Student Information</h3>
+                        <div style="display: flex; gap: 30px;">
+                            <div style="flex: 1;">
                         <div class="detail-row">
                             <div class="detail-label">Name</div>
                             <div class="detail-value"><?php echo htmlspecialchars($data['student']['name']); ?></div>
@@ -53,6 +55,26 @@ $page = 'manager_students';
                         <div class="detail-row">
                             <div class="detail-label">Session</div>
                             <div class="detail-value"><?php echo htmlspecialchars($data['student']['session_year']); ?></div>
+                        </div>
+                            </div>
+                            
+                            <?php if (!empty($data['student']['profile_picture'])): ?>
+                            <div style="flex-shrink: 0;">
+                                <div style="text-align: center;">
+                                    <?php 
+                                    $imagePath = $data['student']['profile_picture'];
+                                    // If path doesn't start with public/, add it
+                                    if (strpos($imagePath, 'public/') !== 0) {
+                                        $imagePath = 'public/' . $imagePath;
+                                    }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($imagePath); ?>" 
+                                         alt="Profile Picture" 
+                                         style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; border: 3px solid #ddd;">
+                                    <p style="margin-top: 10px; font-size: 12px; color: #666;">Profile Picture</p>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     

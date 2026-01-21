@@ -37,16 +37,16 @@ logs/
 log/
 *.log
 
-tmp/
-cache/
-storage/cache/
+#tmp/
+#cache/
+#storage/cache/
 
 # =========================
 # User uploads / generated files
 # =========================
-storage/uploads/
-public/uploads/
-uploads/
+#storage/uploads/
+#public/uploads/
+#uploads/
 
 # If you want to keep the folder but ignore contents:
 # (Create an empty .gitkeep file inside uploads folders)

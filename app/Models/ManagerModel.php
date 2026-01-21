@@ -238,6 +238,32 @@ function manager_reject_application($applicationId, $rejectReason, $managerUserI
     return $result;
 }
 
+function manager_delete_application($applicationId, $managerUserId) {
+    $conn = dbConnect();
+    
+    // First verify the manager has access to this application's hostel
+    $checkSql = "SELECT ra.id 
+                 FROM room_applications ra
+                 JOIN hostel_managers hm ON ra.hostel_id = hm.hostel_id
+                 WHERE ra.id = $applicationId AND hm.manager_user_id = $managerUserId";
+    $checkResult = mysqli_query($conn, $checkSql);
+    
+    if (!$checkResult || mysqli_num_rows($checkResult) === 0) {
+        mysqli_close($conn);
+        return false; // No access to this application
+    }
+    
+    $sql = "DELETE FROM room_applications WHERE id = $applicationId";
+    $result = mysqli_query($conn, $sql);
+    mysqli_close($conn);
+    
+    if ($result) {
+        createAuditLog($managerUserId, 'DELETE', 'room_applications', $applicationId, json_encode(['deleted_by' => $managerUserId]));
+    }
+    
+    return $result;
+}
+
 // ============================================================
 // ALLOCATIONS
 // ============================================================

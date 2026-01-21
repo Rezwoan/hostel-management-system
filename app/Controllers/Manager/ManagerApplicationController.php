@@ -41,9 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($formAction === 'delete_application') {
         $id = (int)$_POST['id'];
-        // Managers cannot delete applications - redirect with error
-        header('Location: index.php?page=manager_applications&error=permission_denied');
-        exit;
+        $result = manager_delete_application($id, $managerUserId);
+        if ($result) {
+            header('Location: index.php?page=manager_applications&msg=application_deleted');
+            exit;
+        } else {
+            $error = 'Failed to delete application or access denied.';
+        }
     }
 }
 

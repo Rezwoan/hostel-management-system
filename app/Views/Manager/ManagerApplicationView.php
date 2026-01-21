@@ -286,9 +286,15 @@ $page = 'manager_applications';
                                                                 <input type="hidden" name="status" value="APPROVED">
                                                                 <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                                             </form>
+                                                            <button type="button" class="btn btn-sm btn-danger" onclick="openRejectModal(<?php echo (int)$app['id']; ?>)">Reject</button>
                                                         <?php elseif ($status === 'APPROVED'): ?>
                                                             <a href="index.php?page=manager_allocations&action=add&student_id=<?php echo (int)$app['student_user_id']; ?>&hostel_id=<?php echo (int)$app['hostel_id']; ?>&app_id=<?php echo (int)$app['id']; ?>" class="btn btn-sm btn-primary">Allocate</a>
                                                         <?php endif; ?>
+                                                        <form method="POST" action="index.php?page=manager_applications" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this application?');">
+                                                            <input type="hidden" name="form_action" value="delete_application">
+                                                            <input type="hidden" name="id" value="<?php echo (int)$app['id']; ?>">
+                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -306,5 +312,76 @@ $page = 'manager_applications';
             </div>
         </main>
     </div>
+    
+    <!-- Reject Modal with Reason -->
+    <div id="rejectModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h3>Reject Application</h3>
+            <p>Please provide a reason for rejection:</p>
+            <form id="rejectForm" method="POST" action="index.php?page=manager_applications">
+                <input type="hidden" name="form_action" value="update_application_status">
+                <input type="hidden" name="id" id="rejectAppId" value="">
+                <input type="hidden" name="status" value="REJECTED">
+                <textarea name="reject_reason" id="rejectReasonInput" class="form-control" rows="3" placeholder="Enter rejection reason..." required></textarea>
+                <div class="modal-actions" style="margin-top: 15px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .modal-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+    </style>
+    
+    <script>
+        function openRejectModal(appId) {
+            document.getElementById('rejectAppId').value = appId;
+            document.getElementById('rejectReasonInput').value = '';
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+        
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+            document.getElementById('rejectReasonInput').value = '';
+            document.getElementById('rejectAppId').value = '';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
+    </script>
 </body>
 </html>

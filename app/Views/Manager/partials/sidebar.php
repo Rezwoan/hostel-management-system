@@ -3,6 +3,7 @@
 $currentPage = $page ?? '';
 
 $applicationPages = ['manager_applications', 'manager_allocations'];
+$financePages = ['manager_fee_periods', 'manager_fees', 'manager_payments'];
 $supportPages = ['manager_complaints', 'manager_notices'];
 
 $showSidebar = false;
@@ -16,6 +17,16 @@ if (in_array($currentPage, $applicationPages)) {
         ['page' => 'manager_applications', 'label' => 'Applications', 'icon' => '📝'],
         ['page' => 'manager_allocations', 'label' => 'Allocations', 'icon' => '✅'],
         ['page' => 'manager_allocations&action=add', 'label' => '+ New Allocation', 'icon' => ''],
+    ];
+} elseif (in_array($currentPage, $financePages)) {
+    $showSidebar = true;
+    $sidebarTitle = 'Finance';
+    $sidebarLinks = [
+        ['page' => 'manager_fee_periods', 'label' => 'Fee Periods', 'icon' => '📅'],
+        ['page' => 'manager_fees', 'label' => 'Invoices', 'icon' => '📄'],
+        ['page' => 'manager_fees&action=add', 'label' => '+ Generate Invoice', 'icon' => ''],
+        ['page' => 'manager_payments', 'label' => 'Payments', 'icon' => '💰'],
+        ['page' => 'manager_payments&action=add', 'label' => '+ Record Payment', 'icon' => ''],
     ];
 } elseif (in_array($currentPage, $supportPages)) {
     $showSidebar = true;

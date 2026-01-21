@@ -807,3 +807,179 @@ function manager_get_notice_by_id($noticeId) {
     mysqli_close($conn);
     return $notice;
 }
+
+// ============================================================
+// INVOICE & FEE MANAGEMENT
+// ============================================================
+
+function manager_verify_hostel_access($managerUserId, $hostelId) {
+    $conn = dbConnect();
+    $sql = "SELECT id FROM hostel_managers 
+            WHERE manager_user_id = $managerUserId AND hostel_id = $hostelId";
+    $result = mysqli_query($conn, $sql);
+    $hasAccess = mysqli_num_rows($result) > 0;
+    mysqli_close($conn);
+    return $hasAccess;
+}
+
+function manager_get_students_with_allocations($managerUserId) {
+    $conn = dbConnect();
+    $hostels = manager_get_assigned_hostels($managerUserId);
+    $hostelIds = array_column($hostels, 'id');
+    
+    if (empty($hostelIds)) {
+        mysqli_close($conn);
+        return [];
+    }
+    
+    $hostelIdsStr = implode(',', $hostelIds);
+    $sql = "SELECT DISTINCT u.id, u.name, u.email, sp.student_id,
+                   a.hostel_id, h.name as hostel_name, r.room_no as room_number
+            FROM users u
+            JOIN student_profiles sp ON u.id = sp.user_id
+            JOIN allocations a ON u.id = a.student_user_id
+            JOIN hostels h ON a.hostel_id = h.id
+            JOIN seats s ON a.seat_id = s.id
+            JOIN rooms r ON s.room_id = r.id
+            WHERE a.status = 'ACTIVE' AND a.hostel_id IN ($hostelIdsStr)
+            ORDER BY u.name";
+    $result = mysqli_query($conn, $sql);
+    $students = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $students;
+}
+
+function manager_get_students_in_hostels($managerUserId) {
+    $conn = dbConnect();
+    $hostels = manager_get_assigned_hostels($managerUserId);
+    $hostelIds = array_column($hostels, 'id');
+    
+    if (empty($hostelIds)) {
+        mysqli_close($conn);
+        return [];
+    }
+    
+    $hostelIdsStr = implode(',', $hostelIds);
+    $sql = "SELECT DISTINCT u.id, u.name, u.email, sp.student_id
+            FROM users u
+            JOIN student_profiles sp ON u.id = sp.user_id
+            JOIN allocations a ON u.id = a.student_user_id
+            WHERE a.hostel_id IN ($hostelIdsStr)
+            ORDER BY u.name";
+    $result = mysqli_query($conn, $sql);
+    $students = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $students;
+}
+
+function manager_get_invoices($managerUserId) {
+    $conn = dbConnect();
+    $hostels = manager_get_assigned_hostels($managerUserId);
+    $hostelIds = array_column($hostels, 'id');
+    
+    if (empty($hostelIds)) {
+        mysqli_close($conn);
+        return [];
+    }
+    
+    $hostelIdsStr = implode(',', $hostelIds);
+    $sql = "SELECT i.*, 
+                   u.name as student_name, 
+                   sp.student_id as student_id_number,
+                   fp.name as period_name,
+                   COALESCE(SUM(p.amount_paid), 0) as paid_amount
+            FROM student_invoices i
+            JOIN users u ON i.student_user_id = u.id
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
+            JOIN fee_periods fp ON i.period_id = fp.id
+            LEFT JOIN payments p ON i.id = p.invoice_id
+            WHERE i.hostel_id IN ($hostelIdsStr)
+            GROUP BY i.id
+            ORDER BY i.generated_at DESC";
+    $result = mysqli_query($conn, $sql);
+    $invoices = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $invoices;
+}
+
+// Get all payments for manager's hostels
+function manager_get_payments($managerUserId) {
+    $conn = dbConnect();
+    $hostels = manager_get_assigned_hostels($managerUserId);
+    $hostelIds = array_column($hostels, 'id');
+    
+    if (empty($hostelIds)) {
+        mysqli_close($conn);
+        return [];
+    }
+    
+    $hostelIdsStr = implode(',', $hostelIds);
+    $sql = "SELECT p.*, 
+                   i.amount_due,
+                   u.name as student_name,
+                   sp.student_id as student_id_number,
+                   r.name as recorder_name
+            FROM payments p
+            JOIN student_invoices i ON p.invoice_id = i.id
+            JOIN users u ON i.student_user_id = u.id
+            LEFT JOIN student_profiles sp ON u.id = sp.user_id
+            JOIN users r ON p.recorded_by_user_id = r.id
+            WHERE i.hostel_id IN ($hostelIdsStr)
+            ORDER BY p.id DESC";
+    $result = mysqli_query($conn, $sql);
+    $payments = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_close($conn);
+    return $payments;
+}
+
+// Get payment statistics for manager's hostels
+function manager_get_payment_stats($managerUserId) {
+    $conn = dbConnect();
+    $hostels = manager_get_assigned_hostels($managerUserId);
+    $hostelIds = array_column($hostels, 'id');
+    
+    if (empty($hostelIds)) {
+        mysqli_close($conn);
+        return [
+            'total_collected' => 0,
+            'total_payments' => 0,
+            'today_collected' => 0,
+            'this_month' => 0
+        ];
+    }
+    
+    $hostelIdsStr = implode(',', $hostelIds);
+    
+    // Total collected
+    $sql = "SELECT COALESCE(SUM(p.amount_paid), 0) as total_collected,
+                   COUNT(p.id) as total_payments
+            FROM payments p
+            JOIN student_invoices i ON p.invoice_id = i.id
+            WHERE i.hostel_id IN ($hostelIdsStr)";
+    $result = mysqli_query($conn, $sql);
+    $stats = mysqli_fetch_assoc($result);
+    
+    // Today's collection
+    $sql = "SELECT COALESCE(SUM(p.amount_paid), 0) as today_collected
+            FROM payments p
+            JOIN student_invoices i ON p.invoice_id = i.id
+            WHERE i.hostel_id IN ($hostelIdsStr)
+            AND DATE(p.paid_at) = CURDATE()";
+    $result = mysqli_query($conn, $sql);
+    $todayStats = mysqli_fetch_assoc($result);
+    $stats['today_collected'] = $todayStats['today_collected'];
+    
+    // This month's collection
+    $sql = "SELECT COALESCE(SUM(p.amount_paid), 0) as this_month
+            FROM payments p
+            JOIN student_invoices i ON p.invoice_id = i.id
+            WHERE i.hostel_id IN ($hostelIdsStr)
+            AND YEAR(p.paid_at) = YEAR(CURDATE())
+            AND MONTH(p.paid_at) = MONTH(CURDATE())";
+    $result = mysqli_query($conn, $sql);
+    $monthStats = mysqli_fetch_assoc($result);
+    $stats['this_month'] = $monthStats['this_month'];
+    
+    mysqli_close($conn);
+    return $stats;
+}

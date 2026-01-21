@@ -11,6 +11,7 @@ $page = 'manager_complaints';
     <?php include __DIR__ . '/../Admin/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -29,7 +30,7 @@ $page = 'manager_complaints';
                 <?php endif; ?>
                 
                 <?php if ($action === 'view' && isset($data['complaint'])): ?>
-                    <!-- View Complaint -->
+                    <!-- View Complaint Details -->
                     <div class="breadcrumb">
                         <a href="index.php?page=manager_complaints">Complaints</a>
                         <span>/</span>
@@ -37,36 +38,45 @@ $page = 'manager_complaints';
                     </div>
                     
                     <div class="detail-card" style="margin-bottom: 20px;">
-                        <h3>Complaint Details</h3>
+                        <h3>Complaint #<?php echo (int)$data['complaint']['id']; ?></h3>
                         <div class="detail-row">
-                            <div class="detail-label">Complaint ID</div>
-                            <div class="detail-value"><?php echo (int)$data['complaint']['id']; ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Student</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['student_name']); ?> (<?php echo htmlspecialchars($data['complaint']['student_id']); ?>)</div>
+                            <div class="detail-label">Subject</div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['subject'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Category</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['category_name']); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['category_name'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">Subject</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['subject']); ?></div>
+                            <div class="detail-label">Submitted By</div>
+                            <div class="detail-value">
+                                <?php echo htmlspecialchars($data['complaint']['student_name'] ?? ''); ?><br>
+                                <small><?php echo htmlspecialchars($data['complaint']['student_email'] ?? ''); ?></small>
+                            </div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">Description</div>
-                            <div class="detail-value"><?php echo nl2br(htmlspecialchars($data['complaint']['description'])); ?></div>
+                            <div class="detail-label">Hostel/Room</div>
+                            <div class="detail-value">
+                                <?php echo htmlspecialchars($data['complaint']['hostel_name'] ?? 'N/A'); ?>
+                                <?php if (!empty($data['complaint']['room_no'])): ?>
+                                    / Room <?php echo htmlspecialchars($data['complaint']['room_no']); ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Submitted On</div>
+                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['created_at'] ?? ''); ?></div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-label">Status</div>
                             <div class="detail-value">
                                 <?php 
-                                $status = $data['complaint']['status'];
+                                $status = $data['complaint']['status'] ?? '';
                                 $statusClass = 'badge-warning';
                                 if ($status === 'RESOLVED') $statusClass = 'badge-success';
                                 elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                 elseif ($status === 'CLOSED') $statusClass = 'badge-secondary';
+                                elseif ($status === 'OPEN') $statusClass = 'badge-warning';
                                 ?>
                                 <span class="badge <?php echo $statusClass; ?>">
                                     <?php echo htmlspecialchars($status); ?>
@@ -74,161 +84,130 @@ $page = 'manager_complaints';
                             </div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-label">Created</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($data['complaint']['created_at']); ?></div>
+                            <div class="detail-label">Description</div>
+                            <div class="detail-value"><?php echo nl2br(htmlspecialchars($data['complaint']['description'] ?? '')); ?></div>
                         </div>
                     </div>
                     
-                    <!-- Messages -->
-                    <div class="table-card" style="margin-bottom: 20px;">
-                        <div class="table-card-header">
-                            <h3>Conversation</h3>
-                        </div>
-                        <div class="card-body">
-                            <?php if (!empty($data['messages'])): ?>
-                                <?php foreach ($data['messages'] as $msg): ?>
-                                    <div class="message-item <?php echo $msg['sender_type'] === 'staff' ? 'message-staff' : 'message-student'; ?>" style="margin-bottom: 15px; padding: 10px; border-left: 3px solid <?php echo $msg['sender_type'] === 'staff' ? '#007bff' : '#28a745'; ?>; background: #f8f9fa;">
-                                        <div style="font-weight: bold; margin-bottom: 5px;">
-                                            <?php echo htmlspecialchars($msg['sender_name']); ?>
-                                            <span style="font-size: 0.85em; color: #666;">- <?php echo date('Y-m-d H:i', strtotime($msg['created_at'])); ?></span>
-                                        </div>
-                                        <div><?php echo nl2br(htmlspecialchars($msg['message'])); ?></div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <p class="empty-state">No messages yet</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <!-- Add Response -->
-                    <div class="form-card" style="margin-bottom: 20px;">
-                        <h3>Add Response</h3>
-                        <form action="index.php?page=manager_complaints" method="POST">
-                            <input type="hidden" name="form_action" value="add_response">
-                            <input type="hidden" name="complaint_id" value="<?php echo (int)$data['complaint']['id']; ?>">
-                            
-                            <div class="form-group">
-                                <label for="message">Your Response *</label>
-                                <textarea name="message" id="message" required class="form-control" rows="4"></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">Send Response</button>
-                        </form>
-                    </div>
-                    
-                    <!-- Update Status -->
+                    <!-- Update Status Form -->
+                    <?php if (($data['complaint']['status'] ?? '') !== 'CLOSED'): ?>
                     <div class="form-card">
-                        <h3>Update Status</h3>
+                        <h3>Update Complaint Status</h3>
                         <form action="index.php?page=manager_complaints" method="POST">
                             <input type="hidden" name="form_action" value="update_complaint_status">
                             <input type="hidden" name="id" value="<?php echo (int)$data['complaint']['id']; ?>">
                             
                             <div class="form-group">
-                                <label for="status">Status *</label>
-                                <select name="status" id="status" required class="form-control">
-                                    <option value="OPEN" <?php echo $data['complaint']['status'] === 'OPEN' ? 'selected' : ''; ?>>OPEN</option>
-                                    <option value="IN_PROGRESS" <?php echo $data['complaint']['status'] === 'IN_PROGRESS' ? 'selected' : ''; ?>>IN_PROGRESS</option>
-                                    <option value="RESOLVED" <?php echo $data['complaint']['status'] === 'RESOLVED' ? 'selected' : ''; ?>>RESOLVED</option>
-                                    <option value="CLOSED" <?php echo $data['complaint']['status'] === 'CLOSED' ? 'selected' : ''; ?>>CLOSED</option>
+                                <label for="status">Status <span class="required">*</span></label>
+                                <select id="status" name="status" class="form-control" required>
+                                    <option value="OPEN" <?php echo ($data['complaint']['status'] ?? '') === 'OPEN' ? 'selected' : ''; ?>>Open</option>
+                                    <option value="IN_PROGRESS" <?php echo ($data['complaint']['status'] ?? '') === 'IN_PROGRESS' ? 'selected' : ''; ?>>In Progress</option>
+                                    <option value="RESOLVED" <?php echo ($data['complaint']['status'] ?? '') === 'RESOLVED' ? 'selected' : ''; ?>>Resolved</option>
+                                    <option value="CLOSED" <?php echo ($data['complaint']['status'] ?? '') === 'CLOSED' ? 'selected' : ''; ?>>Closed</option>
                                 </select>
                             </div>
                             
-                            <button type="submit" class="btn btn-success">Update Status</button>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Update Status</button>
+                                <a href="index.php?page=manager_complaints" class="btn btn-secondary">Back to List</a>
+                            </div>
                         </form>
                     </div>
-                    
-                <?php else: ?>
-                    <!-- List Complaints -->
-                    <div class="page-header">
-                        <h2>Complaints</h2>
-                        <span class="badge badge-warning"><?php echo (int)($data['open_count'] ?? 0); ?> Open/In Progress</span>
-                    </div>
-                    
-                    <!-- Stats Grid -->
-                    <?php if (isset($data['stats'])): ?>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">Open</div>
-                            <div class="stat-value"><?php echo (int)$data['stats']['open']; ?></div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">In Progress</div>
-                            <div class="stat-value"><?php echo (int)$data['stats']['in_progress']; ?></div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Resolved</div>
-                            <div class="stat-value"><?php echo (int)$data['stats']['resolved']; ?></div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Total</div>
-                            <div class="stat-value"><?php echo (int)$data['stats']['total']; ?></div>
-                        </div>
+                    <?php else: ?>
+                    <div class="form-actions">
+                        <a href="index.php?page=manager_complaints" class="btn btn-secondary">Back to List</a>
                     </div>
                     <?php endif; ?>
                     
-                    <!-- Filter Bar -->
+                <?php else: ?>
+                    <!-- Complaints List -->
+                    <div class="page-header">
+                        <h2>All Complaints</h2>
+                    </div>
+                    
+                    <!-- Filter Bar - Client-Side (Instant, No Page Reload) -->
                     <div class="filter-bar">
-                        <input type="text" id="searchInput" placeholder="Search by student, subject..." class="form-control">
-                        <select id="statusFilter" class="form-control">
-                            <option value="">All Statuses</option>
-                            <option value="OPEN">Open</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="RESOLVED">Resolved</option>
-                            <option value="CLOSED">Closed</option>
-                        </select>
-                        <?php if (isset($data['categories']) && count($data['categories']) > 0): ?>
-                        <select id="categoryFilter" class="form-control">
-                            <option value="">All Categories</option>
-                            <?php foreach ($data['categories'] as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['name']); ?>">
-                                    <?php echo htmlspecialchars($category['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <?php endif; ?>
+                        <div class="filter-form">
+                            <input type="text" id="complaintSearch" class="form-control" placeholder="Search complaints..." data-table-search="complaintsTable">
+                            <select id="statusFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="4">
+                                <option value="">All Status</option>
+                                <option value="OPEN">Open</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="RESOLVED">Resolved</option>
+                                <option value="CLOSED">Closed</option>
+                            </select>
+                            <select id="categoryFilter" class="form-control" data-filter-table="complaintsTable" data-filter-column="2">
+                                <option value="">All Categories</option>
+                                <?php if (!empty($data['categories'])): ?>
+                                    <?php foreach ($data['categories'] as $cat): ?>
+                                        <option value="<?php echo htmlspecialchars($cat['name']); ?>">
+                                            <?php echo htmlspecialchars($cat['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Summary -->
+                    <div class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value"><?php echo (int)($data['stats']['open'] ?? 0); ?></div>
+                            <div class="stat-label">Open</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value"><?php echo (int)($data['stats']['in_progress'] ?? 0); ?></div>
+                            <div class="stat-label">In Progress</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value"><?php echo (int)($data['stats']['resolved'] ?? 0); ?></div>
+                            <div class="stat-label">Resolved</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value"><?php echo (int)($data['stats']['total'] ?? 0); ?></div>
+                            <div class="stat-label">Total</div>
+                        </div>
                     </div>
                     
                     <div class="table-card">
-                        <div class="table-card-header">
-                            <h3>All Complaints</h3>
-                        </div>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="complaintsTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Student</th>
-                                        <th>Category</th>
                                         <th>Subject</th>
-                                        <th>Created</th>
+                                        <th>Category</th>
+                                        <th>Student</th>
                                         <th>Status</th>
+                                        <th>Date</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="complaintsTableBody">
                                     <?php if (!empty($data['complaints'])): ?>
                                         <?php foreach ($data['complaints'] as $complaint): ?>
-                                            <tr>
+                                            <tr data-id="<?php echo (int)$complaint['id']; ?>">
                                                 <td><?php echo (int)$complaint['id']; ?></td>
-                                                <td><?php echo htmlspecialchars($complaint['student_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($complaint['category_name']); ?></td>
-                                                <td><?php echo htmlspecialchars(substr($complaint['subject'], 0, 50)); ?><?php echo strlen($complaint['subject']) > 50 ? '...' : ''; ?></td>
-                                                <td><?php echo date('Y-m-d', strtotime($complaint['created_at'])); ?></td>
+                                                <td><?php echo htmlspecialchars(substr($complaint['subject'], 0, 30)); ?><?php echo strlen($complaint['subject']) > 30 ? '...' : ''; ?></td>
+                                                <td><?php echo htmlspecialchars($complaint['category_name'] ?? ''); ?></td>
+                                                <td><?php echo htmlspecialchars($complaint['student_name'] ?? ''); ?></td>
                                                 <td>
                                                     <?php 
-                                                    $status = $complaint['status'];
+                                                    $status = $complaint['status'] ?? 'OPEN';
                                                     $statusClass = 'badge-warning';
                                                     if ($status === 'RESOLVED') $statusClass = 'badge-success';
-                                                    elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                                     elseif ($status === 'CLOSED') $statusClass = 'badge-secondary';
+                                                    elseif ($status === 'IN_PROGRESS') $statusClass = 'badge-info';
                                                     ?>
                                                     <span class="badge <?php echo $statusClass; ?>">
                                                         <?php echo htmlspecialchars($status); ?>
                                                     </span>
                                                 </td>
+                                                <td><?php echo date('Y-m-d', strtotime($complaint['created_at'] ?? '')); ?></td>
                                                 <td>
-                                                    <a href="index.php?page=manager_complaints&action=view&id=<?php echo (int)$complaint['id']; ?>" class="btn btn-sm btn-primary">View</a>
+                                                    <div class="action-btns">
+                                                        <a href="index.php?page=manager_complaints&action=view&id=<?php echo (int)$complaint['id']; ?>" class="btn btn-sm btn-secondary">View</a>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

@@ -268,6 +268,16 @@ switch ($page) {
         require_once __DIR__ . '/app/Controllers/Manager/ManagerFeeController.php';
         break;
     
+    case 'manager_fee_periods':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerFeePeriodController.php';
+        break;
+    
+    case 'manager_payments':
+        require_role('MANAGER');
+        require_once __DIR__ . '/app/Controllers/Manager/ManagerPaymentController.php';
+        break;
+    
     case 'manager_notices':
         require_role('MANAGER');
         require_once __DIR__ . '/app/Controllers/Manager/ManagerNoticeController.php';

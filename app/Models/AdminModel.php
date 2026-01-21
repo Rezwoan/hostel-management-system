@@ -126,7 +126,7 @@ function getAllUsers() {
 function getUserById($id) {
     $conn = dbConnect();
     $sql = "SELECT u.*, GROUP_CONCAT(r.name) as roles, GROUP_CONCAT(r.id) as role_ids,
-                   sp.student_id, sp.department, sp.session_year, sp.dob, sp.address
+                   sp.student_id, sp.department, sp.session_year, sp.dob, sp.address, sp.profile_picture
             FROM users u 
             LEFT JOIN user_roles ur ON u.id = ur.user_id 
             LEFT JOIN roles r ON ur.role_id = r.id 
@@ -366,7 +366,7 @@ function getStudentsWithActiveAllocations() {
 
 function getStudentById($userId) {
     $conn = dbConnect();
-    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address 
+    $sql = "SELECT u.*, sp.student_id, sp.department, sp.session_year, sp.dob, sp.address, sp.profile_picture 
             FROM users u 
             JOIN student_profiles sp ON u.id = sp.user_id 
             WHERE u.id = $userId";

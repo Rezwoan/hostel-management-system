@@ -33,7 +33,7 @@
 
                 <?php if (!empty($success_msg)): ?>
                     <div class="alert alert-success">
-                        <strong>Registration Successful!</strong> <?php echo htmlspecialchars($success_msg); ?>
+                        <strong>Registration Successful!</strong> <?php echo $success_msg; ?>
                     </div>
                 <?php endif; ?>
 

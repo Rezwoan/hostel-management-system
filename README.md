@@ -211,11 +211,6 @@ Full ER diagram available at: `docs/Database ER Diagram.drawio`
 - **Input Validation** – Server-side validation for all user inputs
 - **XSS Prevention** – Output escaping with `htmlspecialchars()`
 
----
-
-## Contributing
-
-Contributions are welcome! Please read the [Contributing Guide](docs/CONTRIBUTING.md) for details on our development workflow and code standards.
 
 ---
 

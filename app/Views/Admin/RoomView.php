@@ -8,12 +8,12 @@ $page = 'admin_rooms';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
     <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
+    <script>window.currentAction = '<?php echo $action; ?>';</script>
     <?php include __DIR__ . '/partials/header.php'; ?>
     
     <div class="admin-layout">
@@ -391,177 +391,6 @@ $page = 'admin_rooms';
         </main>
     </div>
     
-    <script>
-    // Room Management: Cascading dropdowns and auto-population
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentAction = '<?php echo $action; ?>';
-        
-        // ADD PAGE LOGIC
-        if (currentAction === 'add') {
-            const hostelSelect = document.getElementById('hostel_id');
-            const floorSelect = document.getElementById('floor_id');
-            const roomNoInput = document.getElementById('room_no');
-            const roomTypeSelect = document.getElementById('room_type_id');
-            const capacityInput = document.getElementById('capacity');
-            
-            if (hostelSelect && floorSelect && roomNoInput && roomTypeSelect && capacityInput) {
-                
-                // When hostel is selected, load its floors
-                hostelSelect.addEventListener('change', function() {
-                    const hostelId = this.value;
-                    
-                    // Reset dependent fields
-                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
-                    floorSelect.disabled = true;
-                    roomNoInput.value = '';
-                    
-                    if (hostelId) {
-                        // Fetch floors for selected hostel
-                        fetch('app/Controllers/Api/get_floors.php?hostel_id=' + hostelId)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success && data.data.length > 0) {
-                                    floorSelect.innerHTML = '<option value="">Select Floor</option>';
-                                    data.data.forEach(floor => {
-                                        const option = document.createElement('option');
-                                        option.value = floor.id;
-                                        option.textContent = (floor.label || 'Floor ' + floor.floor_no);
-                                        floorSelect.appendChild(option);
-                                    });
-                                    floorSelect.disabled = false;
-                                } else {
-                                    floorSelect.innerHTML = '<option value="">No floors available</option>';
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error loading floors:', error);
-                                floorSelect.innerHTML = '<option value="">Error loading floors</option>';
-                            });
-                    } else {
-                        floorSelect.innerHTML = '<option value="">Select Hostel First</option>';
-                    }
-                });
-                
-                // When floor is selected, generate room number
-                floorSelect.addEventListener('change', function() {
-                    const floorId = this.value;
-                    
-                    if (floorId) {
-                        roomNoInput.value = 'Loading...';
-                        roomNoInput.disabled = true;
-                        
-                        // Fetch next room number for selected floor
-                        fetch('app/Controllers/Api/get_next_room_number.php?floor_id=' + floorId)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    roomNoInput.value = data.next_room_no;
-                                } else {
-                                    console.error('Error:', data.error);
-                                    roomNoInput.value = '101';
-                                }
-                                roomNoInput.disabled = false;
-                            })
-                            .catch(error => {
-                                console.error('Fetch error:', error);
-                                roomNoInput.value = '101';
-                                roomNoInput.disabled = false;
-                            });
-                    } else {
-                        roomNoInput.value = '';
-                    }
-                });
-                
-                // When room type is selected, populate capacity
-                roomTypeSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const capacity = selectedOption.getAttribute('data-capacity');
-                    
-                    if (capacity) {
-                        capacityInput.value = capacity;
-                    } else {
-                        capacityInput.value = '';
-                    }
-                });
-            }
-        }
-        
-        // EDIT PAGE LOGIC
-        if (currentAction === 'edit') {
-            const editHostelSelect = document.getElementById('edit_hostel_id');
-            const editFloorSelect = document.getElementById('edit_floor_id');
-            const editRoomTypeSelect = document.getElementById('edit_room_type_id');
-            const editCapacityInput = document.getElementById('edit_capacity');
-            
-            if (editHostelSelect && editFloorSelect && editRoomTypeSelect && editCapacityInput) {
-                
-                // Store all floor options with their hostel IDs
-                const allFloorOptions = Array.from(editFloorSelect.options).filter(opt => opt.value !== '');
-                const currentFloorId = editFloorSelect.getAttribute('data-current-floor');
-                
-                // Function to filter floors by hostel
-                function filterFloorsByHostel(hostelId) {
-                    const currentValue = editFloorSelect.value;
-                    editFloorSelect.innerHTML = '<option value="">Select Floor</option>';
-                    
-                    const filteredFloors = allFloorOptions.filter(opt => 
-                        opt.getAttribute('data-hostel-id') == hostelId
-                    );
-                    
-                    if (filteredFloors.length > 0) {
-                        filteredFloors.forEach(opt => {
-                            editFloorSelect.appendChild(opt.cloneNode(true));
-                        });
-                        
-                        // Restore previous selection if it belongs to current hostel
-                        if (currentValue && filteredFloors.some(opt => opt.value == currentValue)) {
-                            editFloorSelect.value = currentValue;
-                        }
-                    } else {
-                        editFloorSelect.innerHTML = '<option value="">No floors available for this hostel</option>';
-                    }
-                }
-                
-                // When hostel is changed in edit mode, filter floors
-                editHostelSelect.addEventListener('change', function() {
-                    const hostelId = this.value;
-                    if (hostelId) {
-                        filterFloorsByHostel(hostelId);
-                    } else {
-                        editFloorSelect.innerHTML = '<option value="">Select Hostel First</option>';
-                    }
-                });
-                
-                // When room type is changed, update capacity
-                editRoomTypeSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const capacity = selectedOption.getAttribute('data-capacity');
-                    
-                    if (capacity) {
-                        // Show confirmation before changing capacity
-                        if (editCapacityInput.value && editCapacityInput.value != capacity) {
-                            if (confirm('Changing room type will update capacity to ' + capacity + '. Continue?')) {
-                                editCapacityInput.value = capacity;
-                            } else {
-                                // Revert to previous selection
-                                const previousValue = editRoomTypeSelect.getAttribute('data-previous-value');
-                                if (previousValue) {
-                                    editRoomTypeSelect.value = previousValue;
-                                }
-                                return;
-                            }
-                        } else {
-                            editCapacityInput.value = capacity;
-                        }
-                        editRoomTypeSelect.setAttribute('data-previous-value', this.value);
-                    }
-                });
-                
-                // Store initial value for room type
-                editRoomTypeSelect.setAttribute('data-previous-value', editRoomTypeSelect.value);
-            }
-        }
-    });
-    </script>
+    <script src="app/Views/Admin/js/RoomView.js"></script>
 </body>
 </html>

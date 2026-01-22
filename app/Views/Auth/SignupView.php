@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Registration - Hostel Management System</title>
-    <?php 
-    $pageTitle = 'Student Registration';
-    $pageDescription = 'Register for a student account to apply for hostel accommodation. Quick and easy signup process.';
-    include __DIR__ . '/../partials/meta.php'; 
-    ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Auth/css/SignupView.css">
 </head>
@@ -38,7 +33,7 @@
 
                 <?php if (!empty($success_msg)): ?>
                     <div class="alert alert-success">
-                        <strong>Registration Successful!</strong> <?php echo htmlspecialchars($success_msg); ?>
+                        <strong>Registration Successful!</strong> <?php echo $success_msg; ?>
                     </div>
                 <?php endif; ?>
 

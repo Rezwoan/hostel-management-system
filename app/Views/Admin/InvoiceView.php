@@ -8,12 +8,13 @@ $page = 'admin_invoices';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Admin/css/common.css">
     <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
+    <script>window.currentAction = '<?php echo $action; ?>';</script>
     <?php include __DIR__ . '/partials/header.php'; ?>
     
     <div class="admin-layout">
@@ -103,38 +104,7 @@ $page = 'admin_invoices';
                         </form>
                     </div>
                     
-                    <script>
-                        // Auto-select hostel and fetch amount due based on student's allocation
-                        document.getElementById('student_user_id').addEventListener('change', function() {
-                            let selectedOption = this.options[this.selectedIndex];
-                            let hostelId = selectedOption.dataset.hostelId;
-                            let studentUserId = this.value;
-                            
-                            if (hostelId) {
-                                document.getElementById('hostel_id').value = hostelId;
-                            }
-                            
-                            // Fetch the room fee for this student
-                            if (studentUserId) {
-                                fetch(`app/Controllers/Api/get_student_room_fee.php?student_user_id=${studentUserId}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success && data.data.default_fee) {
-                                            document.getElementById('amount_due').value = data.data.default_fee.toFixed(2);
-                                        } else {
-                                            console.error('Failed to fetch room fee:', data.error || 'Unknown error');
-                                            document.getElementById('amount_due').value = '';
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error fetching room fee:', error);
-                                        document.getElementById('amount_due').value = '';
-                                    });
-                            } else {
-                                document.getElementById('amount_due').value = '';
-                            }
-                        });
-                    </script>
+
                     
                 <?php elseif ($action === 'edit' && isset($data['invoice'])): ?>
                     <!-- Edit Invoice Form -->
@@ -481,38 +451,7 @@ $page = 'admin_invoices';
         </div>
     </div>
     
-    <script>
-        let pendingAction = null;
-        let pendingRow = null;
-        
-        function showConfirm(title, message, callback) {
-            document.getElementById("confirmTitle").textContent = title;
-            document.getElementById("confirmMessage").textContent = message;
-            document.getElementById("confirmModal").classList.add("open");
-            pendingAction = callback;
-        }
-        
-        function closeModal() {
-            document.getElementById("confirmModal").classList.remove("open");
-            pendingAction = null;
-            pendingRow = null;
-        }
-        
-        document.getElementById("confirmBtn").addEventListener("click", function() {
-            if (pendingAction) pendingAction();
-            closeModal();
-        });
-        
-        // Table search
-        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#invoicesTable tbody tr");
-            
-            rows.forEach(function(row) {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
-        });
-    </script>
+    <script src="app/Views/Admin/js/common.js"></script>
+    <script src="app/Views/Admin/js/InvoiceView.js"></script>
 </body>
 </html>

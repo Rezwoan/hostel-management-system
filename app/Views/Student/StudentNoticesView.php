@@ -8,9 +8,9 @@ $page = 'student_notices';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Student</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Student/css/StudentNoticesView.css">
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -61,51 +61,5 @@ $page = 'student_notices';
             </div>
         </main>
     </div>
-    
-    <style>
-    .notice-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-        overflow: hidden;
-    }
-    .notice-header {
-        padding: 20px;
-        border-bottom: 1px solid #e9ecef;
-    }
-    .notice-header h3 {
-        margin: 0 0 10px 0;
-        font-size: 1.4em;
-    }
-    .notice-meta {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.9em;
-    }
-    .notice-body {
-        padding: 20px;
-        line-height: 1.8;
-    }
-    .notice-footer {
-        padding: 15px 20px;
-        background: #f8f9fa;
-        border-top: 1px solid #e9ecef;
-        font-size: 0.9em;
-        color: #6c757d;
-    }
-    .empty-state-card {
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .empty-state-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-    }
-    </style>
 </body>
 </html>

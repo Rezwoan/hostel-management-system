@@ -224,4 +224,88 @@ function deleteAllRememberTokens($userId) {
         mysqli_close($conn);
     }
 }
+
+/**
+ * Verify student identity for password reset
+ * @param string $email
+ * @param string $student_id
+ * @param string $dob (format: YYYY-MM-DD)
+ * @return array ['success' => bool, 'message' => string, 'user_id' => int|null]
+ */
+function verifyStudentIdentity($email, $student_id, $dob) {
+    $conn = dbConnect();
+    $response = ['success' => false, 'message' => '', 'user_id' => null];
+    
+    try {
+        // Join users and student_profiles to verify all three fields
+        $sql = "SELECT u.id, u.name, u.status 
+                FROM users u 
+                INNER JOIN student_profiles sp ON u.id = sp.user_id 
+                WHERE u.email = ? AND sp.student_id = ? AND sp.dob = ?";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "sss", $email, $student_id, $dob);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($row = mysqli_fetch_assoc($result)) {
+            // Check if account is active
+            if ($row['status'] !== 'ACTIVE') {
+                $response['message'] = "Account is " . strtolower($row['status']) . ". Please contact admin.";
+                return $response;
+            }
+            
+            $response['success'] = true;
+            $response['user_id'] = $row['id'];
+            $response['message'] = 'Identity verified successfully.';
+        } else {
+            $response['message'] = 'No matching account found. Please check your email, student ID, and date of birth.';
+        }
+        
+    } catch (Exception $e) {
+        $response['message'] = "System Error: " . $e->getMessage();
+    } finally {
+        mysqli_close($conn);
+    }
+    
+    return $response;
+}
+
+/**
+ * Reset user password
+ * @param int $userId
+ * @param string $newPassword
+ * @return array ['success' => bool, 'message' => string]
+ */
+function resetUserPassword($userId, $newPassword) {
+    $conn = dbConnect();
+    $response = ['success' => false, 'message' => ''];
+    
+    try {
+        // Hash the new password
+        $password_hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        
+        // Update password
+        $sql = "UPDATE users SET password_hash = ? WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "si", $password_hash, $userId);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            // Delete all remember tokens for this user (security measure)
+            deleteAllRememberTokens($userId);
+            
+            $response['success'] = true;
+            $response['message'] = 'Password reset successfully.';
+        } else {
+            $response['message'] = 'Failed to update password. Please try again.';
+        }
+        
+    } catch (Exception $e) {
+        $response['message'] = "System Error: " . $e->getMessage();
+    } finally {
+        mysqli_close($conn);
+    }
+    
+    return $response;
+}
 ?>

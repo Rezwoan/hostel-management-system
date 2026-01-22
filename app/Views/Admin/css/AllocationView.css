@@ -1,0 +1,8 @@
+/* Allocation View CSS */
+
+.alert-info {
+    background: #e7f3ff;
+    border: 1px solid #b3d7ff;
+    padding: 12px;
+    border-radius: 4px;
+}

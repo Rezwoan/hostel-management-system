@@ -1,310 +1,90 @@
-# Contributing Workflow Guide (How We Work)
+# Contributing to Hostel Management System
 
-This guide explains **exactly when** to create branches, commit, open PRs, and how we decide work is **Done**.
+Thank you for considering contributing to this project! This guide will help you get started.
 
----
+## Getting Started
 
-## 1) What is an Issue, Branch, Commit, PR?
+### Prerequisites
 
-### Issue (Task)
+- PHP 8.0 or higher
+- MySQL 8.0 or higher
+- XAMPP (for local development) or any PHP-compatible server
+- Git
 
-A GitHub Issue represents **one unit of work** (one feature, bugfix, chore, or doc update).
+### Local Setup
 
-* Example: “Implement login backend”
-* Example: “Build hostel config UI”
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Rezwoan/hostel-management-system.git
+   ```
 
-### Branch (Workspace)
+2. Navigate to the project directory:
+   ```bash
+   cd hostel-management-system
+   ```
 
-A Git branch is where you do the work for **one issue**.
+3. Update the database credentials in `app/Models/Database.php`.
 
-* One issue → one branch
+4. Import the database schema:
+   ```bash
+   mysql -u your_username -p your_database < database/schema.sql
+   ```
 
-### Commit (Save point)
+5. (Optional) Seed the database with sample data by visiting:
+   ```
+   http://localhost/hostel-management-system/database/seed.php
+   ```
 
-A commit is a **small checkpoint** of working progress.
+6. Start your local server and navigate to:
+   ```
+   http://localhost/hostel-management-system
+   ```
 
-* Multiple commits usually exist inside one issue branch.
+## Development Workflow
 
-### PR (Pull Request)
+### Branch Naming Convention
 
-A PR is how we propose merging our branch into `develop`.
+- `feature/<description>` - For new features
+- `fix/<description>` - For bug fixes
+- `docs/<description>` - For documentation updates
 
-* PR is where review happens.
-* PR is how we keep `develop` stable.
+### Commit Messages
 
----
+Use clear, descriptive commit messages:
+- `feat: add student application form`
+- `fix: resolve seat allocation conflict`
+- `docs: update setup instructions`
 
-## 2) Core rules (must follow)
+### Pull Request Process
 
-* **Never push directly to `main`**.
-* Do not push directly to `develop` (use PR).
-* **Every task = one GitHub issue.**
-* **Every issue = one branch.**
-* **Every branch = one PR.**
-* Every PR must be reviewed by the other teammate before merging.
+1. Fork the repository
+2. Create a feature branch from `main`
+3. Make your changes
+4. Test your changes locally
+5. Submit a pull request to `main`
 
----
+### Code Standards
 
-## 3) Branching strategy
+- Use meaningful variable and function names
+- Add comments for complex logic
+- Follow the existing code structure
+- Use prepared statements for all database queries
+- Validate all user inputs server-side
 
-### Permanent branches
+## Project Structure
 
-* `main` → always stable, demo-ready
-* `develop` → integration branch for all merged work
-
-### Working branches (create from `develop`)
-
-Use kebab-case and keep names short.
-
-**Formats**
-
-* `feature/<area>-<issueNumber>-<short-desc>`
-* `fix/<area>-<issueNumber>-<short-desc>`
-* `chore/<area>-<issueNumber>-<short-desc>`
-
-**Examples**
-
-* `feature/auth-4-login-session`
-* `feature/hostel-config-9-admin-ui`
-* `fix/allocations-14-seat-double-booking`
-* `chore/docs-3-setup-guide`
-
----
-
-## 4) When to create a branch
-
-Create a new branch when:
-
-* You start working on a **new issue**
-* You are fixing a bug tied to an issue
-* You are doing a refactor/chore that deserves review
-
-Do not reuse a branch for multiple issues.
-
----
-
-## 5) When to commit
-
-Commit when:
-
-* You finished a meaningful step that **runs** (or at least doesn’t break the app)
-* You completed a sub-task that can be reviewed on its own
-* You want a safe checkpoint before changing direction
-
-Avoid:
-
-* One giant commit for the whole issue
-* Committing broken code that blocks others
-
-**Good commit rhythm**: ~3–10 commits per issue branch.
-
----
-
-## 6) Commit message format (required)
-
-**Format**
-`type(area): short message (#issueNumber)`
-
-**Allowed types**
-
-* `feat` → new feature
-* `fix` → bug fix
-* `chore` → tooling/config/cleanup
-* `docs` → documentation
-* `refactor` → restructure without behavior change
-* `test` → tests
-
-**Examples**
-
-* `feat(auth): add login endpoint (#4)`
-* `feat(ui): build login form and validation (#6)`
-* `fix(allocations): prevent seat double booking (#14)`
-* `docs(setup): add xampp setup steps (#3)`
-* `chore(db): add indexes for applications (#10)`
-
-**Rules**
-
-* Use present tense: “add”, “fix”, “update”
-* Keep it short
-* Always include `(#issueNumber)`
-
----
-
-## 7) Pull Requests (PRs)
-
-### When to open a PR
-
-Open a PR when:
-
-* The issue work is complete
-* You ran basic manual tests
-* Your branch is updated with latest `develop`
-
-### PR title format (required)
-
-`[AREA] Title (Fixes #issueNumber)`
-
-**Examples**
-
-* `[AUTH] Login + sessions (Fixes #4)`
-* `[HOSTEL-CONFIG] Admin config screens (Fixes #9)`
-* `[ALLOCATIONS] Seat assignment flow (Fixes #14)`
-
-### PR description (required)
-
-Include these sections:
-
-**What changed**
-
-* …
-
-**How to test**
-
-1. …
-2. …
-3. …
-
-**Screenshots (if UI)**
-
-* Add page screenshots or short clip
-
-**Risk / Notes**
-
-* Edge cases, DB changes, migrations, etc.
-
-**Fixes**
-
-* Fixes #ISSUE_NUMBER
-
----
-
-## 8) Definition of Done (DoD)
-
-### What DoD means
-
-**DoD = Definition of Done**.
-It is a shared checklist that answers:
-
-> “Is this issue truly finished and safe to merge?”
-
-DoD prevents:
-
-* Half-done features
-* Missing validation/security
-* UI without loading/error states
-* Forgotten schema updates
-* Demo-breaking bugs
-
-### Where to write DoD
-
-* **One-time (full checklist):** keep it in this document (`docs/CONTRIBUTING.md`).
-* **In every Issue:** just reference it:
-
-  * “DoD: Must meet project DoD (see `docs/CONTRIBUTING.md`) + Acceptance Criteria.”
-* **In every PR:** include a short checklist (best enforcement point).
-
-### When to use DoD
-
-* **Before opening PR:** author checks DoD items
-* **During review:** reviewer checks the same DoD items
-* **Before merging:** confirm critical DoD items are met
-
-### DoD Checklist
-
-#### General (always)
-
-* [ ] Issue Acceptance Criteria met
-* [ ] Branch and commits follow naming rules
-* [ ] PR opened to `develop` with `Fixes #ISSUE_NUMBER`
-* [ ] PR reviewed and approved by teammate
-* [ ] No debug leftovers (`var_dump`, `die`, test prints)
-* [ ] No secrets committed (no real passwords/tokens; no `config.php`)
-* [ ] Basic manual testing completed
-
-#### Backend/API (if touched)
-
-* [ ] Prepared statements used (PDO)
-* [ ] Server-side validation exists
-* [ ] Consistent JSON response shape used
-* [ ] Role/permission checks enforced server-side
-
-#### Database (if touched)
-
-* [ ] `database/schema.sql` updated (and/or change documented)
-* [ ] Indexes/constraints added where needed
-* [ ] Seed/demo data updated if required
-
-#### Frontend/UI (if touched)
-
-* [ ] UI matches `/docs/UI_GUIDE.md`
-* [ ] Loading, empty, and error states exist
-* [ ] Forms show clear validation messages
-* [ ] Basic responsive check (mobile + desktop)
-
-#### Docs (if needed)
-
-* [ ] Setup/demo steps updated if behavior changed
-
----
-
-## 9) Keeping your branch updated (avoid conflicts)
-
-### Option A: merge `develop` into your branch
-
-```bash
-git checkout develop
-git pull origin develop
-git checkout your-branch
-git merge develop
+```
+hostel-management-system/
+├── app/
+│   ├── Controllers/    # Request handlers
+│   ├── Models/         # Database operations
+│   └── Views/          # UI templates
+├── config/             # Configuration files
+├── database/           # Schema and migrations
+├── docs/               # Documentation
+└── public/             # Static assets
 ```
 
-### Option B: rebase your branch on `develop`
+## Need Help?
 
-```bash
-git checkout develop
-git pull origin develop
-git checkout your-branch
-git rebase develop
-```
-
-If you rebased after pushing:
-
-```bash
-git push --force-with-lease
-```
-
-Only do this if you understand it and you tell the teammate.
-
----
-
-## 10) Merging PRs
-
-Recommended: **Squash and merge**
-
-* Keeps `develop` clean (1 commit per PR)
-* Use PR title as squash message
-
-Rule: Don’t merge your own PR without at least 1 approval.
-
----
-
-## 11) Conflict handling
-
-If conflicts happen:
-
-1. Tell teammate which files conflict.
-2. The person currently responsible for that issue resolves conflicts.
-3. Retest the flow and push.
-
-Avoid conflicts:
-
-* Don’t edit the same layout/core files in parallel.
-* Agree on ownership before touching shared files.
-
----
-
-## 12) Daily habit (2-week deadline)
-
-* Pick an issue → create branch → work → commit often → open PR early
-* If stuck for 30–60 minutes, ask teammate
-* Keep PRs small and frequent
+If you have questions or run into issues, feel free to open an issue on GitHub.

@@ -100,6 +100,10 @@ switch ($page) {
         require_once __DIR__ . '/app/Controllers/Auth/SignupController.php';
         break;
 
+    case 'forgot_password':
+        require_once __DIR__ . '/app/Controllers/Auth/ForgotPasswordController.php';
+        break;
+
     case 'logout':
         // Log the logout event before destroying session
         if (isset($_SESSION['user_id'])) {

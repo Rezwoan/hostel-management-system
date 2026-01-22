@@ -8,12 +8,13 @@ $page = 'admin_payments';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Admin/css/common.css">
     <script src="public/assets/js/table-filter.js" defer></script>
 </head>
 <body>
+    <script>window.currentAction = '<?php echo $action; ?>';</script>
     <?php include __DIR__ . '/partials/header.php'; ?>
     
     <div class="admin-layout">
@@ -137,112 +138,6 @@ $page = 'admin_payments';
                                 <a href="index.php?page=admin_payments" class="btn btn-secondary">Cancel</a>
                             </div>
                         </form>
-                        
-                        <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const invoiceSelect = document.getElementById('invoice_id');
-                            const amountInput = document.getElementById('amount_paid');
-                            const amountHint = document.getElementById('amountHint');
-                            const paymentTypeFull = document.getElementById('paymentTypeFull');
-                            const paymentTypePartial = document.getElementById('paymentTypePartial');
-                            const submitBtn = document.getElementById('submitBtn');
-                            const invoiceSummary = document.getElementById('invoiceSummary');
-                            const summaryDue = document.getElementById('summaryDue');
-                            const summaryPaid = document.getElementById('summaryPaid');
-                            const summaryBalance = document.getElementById('summaryBalance');
-                            
-                            let currentBalance = 0;
-                            
-                            function updatePaymentAmount() {
-                                const selectedOption = invoiceSelect.options[invoiceSelect.selectedIndex];
-                                const balance = parseFloat(selectedOption.dataset.balance) || 0;
-                                const due = parseFloat(selectedOption.dataset.due) || 0;
-                                const paid = parseFloat(selectedOption.dataset.paid) || 0;
-                                
-                                currentBalance = balance;
-                                
-                                if (invoiceSelect.value === '') {
-                                    invoiceSummary.style.display = 'none';
-                                    amountInput.value = '';
-                                    amountInput.readOnly = true;
-                                    amountInput.max = '';
-                                    amountHint.textContent = 'Select an invoice first';
-                                    submitBtn.disabled = true;
-                                    return;
-                                }
-                                
-                                // Show invoice summary
-                                invoiceSummary.style.display = 'block';
-                                summaryDue.textContent = due.toFixed(2);
-                                summaryPaid.textContent = paid.toFixed(2);
-                                summaryBalance.textContent = balance.toFixed(2);
-                                
-                                if (balance <= 0) {
-                                    amountInput.value = '';
-                                    amountInput.readOnly = true;
-                                    amountHint.textContent = 'This invoice is already fully paid';
-                                    submitBtn.disabled = true;
-                                    return;
-                                }
-                                
-                                submitBtn.disabled = false;
-                                
-                                if (paymentTypeFull.checked) {
-                                    // Full payment - auto-fill with balance
-                                    amountInput.value = balance.toFixed(2);
-                                    amountInput.readOnly = true;
-                                    amountHint.textContent = 'Full payment will clear the remaining balance';
-                                } else {
-                                    // Partial payment - allow manual entry
-                                    amountInput.readOnly = false;
-                                    amountInput.max = balance;
-                                    amountInput.value = '';
-                                    amountHint.textContent = 'Enter amount (max: $' + balance.toFixed(2) + ')';
-                                }
-                            }
-                            
-                            // Validate partial payment amount
-                            amountInput.addEventListener('input', function() {
-                                if (paymentTypePartial.checked && currentBalance > 0) {
-                                    const enteredAmount = parseFloat(this.value) || 0;
-                                    if (enteredAmount > currentBalance) {
-                                        this.value = currentBalance.toFixed(2);
-                                        alert('Amount cannot exceed the remaining balance of $' + currentBalance.toFixed(2));
-                                    }
-                                    if (enteredAmount <= 0) {
-                                        submitBtn.disabled = true;
-                                    } else {
-                                        submitBtn.disabled = false;
-                                    }
-                                }
-                            });
-                            
-                            // Event listeners
-                            invoiceSelect.addEventListener('change', updatePaymentAmount);
-                            paymentTypeFull.addEventListener('change', updatePaymentAmount);
-                            paymentTypePartial.addEventListener('change', updatePaymentAmount);
-                            
-                            // Form validation
-                            document.getElementById('paymentForm').addEventListener('submit', function(e) {
-                                const amount = parseFloat(amountInput.value) || 0;
-                                if (amount <= 0) {
-                                    e.preventDefault();
-                                    alert('Please enter a valid payment amount');
-                                    return false;
-                                }
-                                if (amount > currentBalance) {
-                                    e.preventDefault();
-                                    alert('Payment amount cannot exceed the remaining balance of $' + currentBalance.toFixed(2));
-                                    return false;
-                                }
-                            });
-                            
-                            // Initialize if invoice is pre-selected (from Pay button on invoice)
-                            if (invoiceSelect.value !== '') {
-                                updatePaymentAmount();
-                            }
-                        });
-                        </script>
                     </div>
                     
                 <?php elseif ($action === 'view' && isset($data['payment'])): ?>
@@ -415,38 +310,7 @@ $page = 'admin_payments';
         </div>
     </div>
     
-    <script>
-        let pendingAction = null;
-        let pendingRow = null;
-        
-        function showConfirm(title, message, callback) {
-            document.getElementById("confirmTitle").textContent = title;
-            document.getElementById("confirmMessage").textContent = message;
-            document.getElementById("confirmModal").classList.add("open");
-            pendingAction = callback;
-        }
-        
-        function closeModal() {
-            document.getElementById("confirmModal").classList.remove("open");
-            pendingAction = null;
-            pendingRow = null;
-        }
-        
-        document.getElementById("confirmBtn").addEventListener("click", function() {
-            if (pendingAction) pendingAction();
-            closeModal();
-        });
-        
-        // Table search
-        document.getElementById("tableSearch")?.addEventListener("keyup", function() {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#paymentsTable tbody tr");
-            
-            rows.forEach(function(row) {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
-        });
-    </script>
+    <script src="app/Views/Admin/js/common.js"></script>
+    <script src="app/Views/Admin/js/PaymentView.js"></script>
 </body>
 </html>

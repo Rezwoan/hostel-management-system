@@ -8,9 +8,9 @@ $page = 'student_room';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Student</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
+    <link rel="stylesheet" href="app/Views/Student/css/StudentRoomView.css">
 </head>
 <body>
     <?php include __DIR__ . '/partials/header.php'; ?>
@@ -141,19 +141,5 @@ $page = 'student_room';
             </div>
         </main>
     </div>
-    
-    <style>
-    .empty-state-card {
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .empty-state-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-    }
-    </style>
 </body>
 </html>

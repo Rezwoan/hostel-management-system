@@ -134,22 +134,4 @@ elseif ($currentPage === 'admin_dashboard') $activeSection = 'dashboard';
 </div>
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
 
-<script>
-function toggleMobileMenu() {
-    document.getElementById('mobileMenu').classList.toggle('open');
-    document.getElementById('mobileMenuOverlay').classList.toggle('open');
-}
-
-function toggleMobileSubmenu(btn) {
-    const submenu = btn.nextElementSibling;
-    const isOpen = submenu.classList.contains('open');
-    
-    // Close all other submenus (optional - for accordion behavior)
-    // document.querySelectorAll('.mobile-submenu.open').forEach(s => s.classList.remove('open'));
-    // document.querySelectorAll('.mobile-nav-toggle').forEach(b => b.classList.remove('expanded'));
-    
-    // Toggle current submenu
-    submenu.classList.toggle('open');
-    btn.classList.toggle('expanded');
-}
-</script>
+<script src="app/Views/Admin/js/header.js"></script>

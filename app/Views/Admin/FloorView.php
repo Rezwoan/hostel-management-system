@@ -8,11 +8,11 @@ $page = 'admin_floors';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?> - HMS Admin</title>
-    <?php include __DIR__ . '/partials/head-meta.php'; ?>
     <link rel="stylesheet" href="public/assets/css/style.css">
     <link rel="stylesheet" href="app/Views/Admin/css/admin.css">
 </head>
 <body>
+    <script>window.currentAction = '<?php echo $action; ?>';</script>
     <?php include __DIR__ . '/partials/header.php'; ?>
     
     <div class="admin-layout">
@@ -272,55 +272,6 @@ $page = 'admin_floors';
         </main>
     </div>
     
-    <script>
-    // Auto-populate floor number and label when hostel is selected (Add Floor page)
-    document.addEventListener('DOMContentLoaded', function() {
-        const hostelSelect = document.getElementById('hostel_id');
-        const floorNoInput = document.getElementById('floor_no');
-        const labelInput = document.getElementById('label');
-        
-        // Only add listener on the add floor page
-        if (hostelSelect && floorNoInput && labelInput && '<?php echo $action; ?>' === 'add') {
-            hostelSelect.addEventListener('change', function() {
-                const hostelId = this.value;
-                
-                if (hostelId) {
-                    // Show loading state
-                    floorNoInput.value = '';
-                    labelInput.value = 'Loading...';
-                    floorNoInput.disabled = true;
-                    labelInput.disabled = true;
-                    
-                    // Fetch next floor number from API
-                    fetch('app/Controllers/Api/get_next_floor_number.php?hostel_id=' + hostelId)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                floorNoInput.value = data.next_floor_no;
-                                labelInput.value = data.suggested_label;
-                            } else {
-                                console.error('Error:', data.error);
-                                floorNoInput.value = 0;
-                                labelInput.value = 'Floor 0';
-                            }
-                            floorNoInput.disabled = false;
-                            labelInput.disabled = false;
-                        })
-                        .catch(error => {
-                            console.error('Fetch error:', error);
-                            floorNoInput.value = 0;
-                            labelInput.value = 'Floor 0';
-                            floorNoInput.disabled = false;
-                            labelInput.disabled = false;
-                        });
-                } else {
-                    // Clear fields if no hostel selected
-                    floorNoInput.value = '';
-                    labelInput.value = '';
-                }
-            });
-        }
-    });
-    </script>
+    <script src="app/Views/Admin/js/FloorView.js"></script>
 </body>
 </html>

@@ -36,10 +36,6 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 $page = isset($_GET['page']) ? (string)$_GET['page'] : 'login';
 
 
-// ==========================================
-// HELPER FUNCTIONS
-// ==========================================
-
 function is_logged_in(): bool
 {
     // Checks if the user_id exists in session (set by loginController)
@@ -75,10 +71,6 @@ function require_role(string $role): void
     }
 }
 
-
-// ==========================================
-// ROUTING LOGIC
-// ==========================================
 
 switch ($page) {
 
